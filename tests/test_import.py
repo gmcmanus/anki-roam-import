@@ -1,4 +1,4 @@
-from anki_roam_import import NoteAdder, import_notes
+from anki_roam_import import NoteAdder, import_notes, extract_notes
 
 from tests.util import mock, call
 
@@ -14,3 +14,9 @@ def test_import_two_notes():
         call(first_note),
         call(second_note),
     ])
+
+
+def test_extract_from_empty_roam_json():
+    roam_json = []
+
+    assert list(extract_notes(roam_json)) == []
