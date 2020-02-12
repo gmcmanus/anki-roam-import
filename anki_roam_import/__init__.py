@@ -46,12 +46,19 @@ class NoteAdder:
 
 
 def translate_note(roam_note: RoamNote) -> AnkiNote:
+    double_bracket_answer = r'\{\{' + answer_regex('double_bracket_answer') + r'\}\}'
+    single_bracket_answer = r'\{' + answer_regex('single_bracket_answer') + r'\}'
+
     return re.sub(
-        pattern=r'\{(?P<answer>.+?)\}',
+        pattern=f'{double_bracket_answer}|{single_bracket_answer}',
         repl=ClozeTranslator(),
         string=roam_note,
         flags=re.DOTALL,
     )
+
+
+def answer_regex(group_name):
+    return f'(?P<{group_name}>.+?)'
 
 
 class ClozeTranslator:
@@ -60,7 +67,12 @@ class ClozeTranslator:
 
     def __call__(self, match):
         self.cloze_number += 1
-        return '{{c' + str(self.cloze_number) + '::' + match['answer'] + '}}'
+
+        answer = match['double_bracket_answer']
+        if answer is None:
+            answer = match['single_bracket_answer']
+
+        return '{{c' + str(self.cloze_number) + '::' + answer + '}}'
 
 
 def import_roam_notes(notes: Iterable[RoamNote], note_adder: NoteAdder) -> None:
