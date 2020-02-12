@@ -2,6 +2,7 @@ import re
 from typing import Iterable, Any, Callable
 from itertools import count
 
+
 # PyCharm doesn't infer well with:
 # JsonData = Union[None, bool, str, float, int, List['JsonData'], Dict[str, 'JsonData']]
 JsonData = Any
@@ -66,8 +67,8 @@ def translate_note(roam_note: RoamNote, cloze_translator: 'ClozeTranslator') -> 
     )
 
 
-def answer_regex(group_prefix):
-    return f'(?:c(?P<{group_prefix}_cloze_number>\d+)::)?(?P<{group_prefix}_answer>.+?)'
+def answer_regex(group_prefix: str) -> str:
+    return fr'(?:c(?P<{group_prefix}_cloze_number>\d+)::)?(?P<{group_prefix}_answer>.+?)'
 
 
 class ClozeTranslator:
@@ -94,7 +95,7 @@ class ClozeTranslator:
                 return cloze_number
 
 
-def get_answer_group(match, group_suffix):
+def get_answer_group(match: re.Match, group_suffix: str) -> str:
     value = match[f'double_bracket_{group_suffix}']
     if value is None:
         value = match[f'single_bracket_{group_suffix}']
