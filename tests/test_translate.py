@@ -6,6 +6,9 @@ from anki_roam_import.translate import translate_note, ClozeTranslator, NoteTran
 from tests.util import mock, call, map_side_effect
 
 
+# TODO should not translate notes that just have {{[[TODO]]}} ... maybe get rid of {{ ??
+
+
 def test_translate_simple_note():
     translation = 'anki'
     dict_cloze_translator = mock(return_value=translation)
