@@ -1,6 +1,6 @@
 import re
 from itertools import count
-from typing import Callable
+from typing import Callable, Match
 
 from .model import RoamNote, AnkiNote
 from .roam import CLOZE_PATTERN
@@ -23,15 +23,15 @@ class ClozeTranslator:
         self.min_unused_cloze_number = 1
         self.used_cloze_numbers = set()
 
-    def __call__(self, match: re.Match) -> str:
-        cloze_number = get_answer_group(match, 'cloze_number')
+    def __call__(self, match: Match[str]) -> str:
+        cloze_number = match['cloze_number']
         if cloze_number is not None:
             cloze_number = int(cloze_number)
         else:
             cloze_number = self._next_unused_cloze_number()
 
         self.used_cloze_numbers.add(cloze_number)
-        answer = get_answer_group(match, 'answer')
+        answer = match['answer']
 
         return '{{c' + str(cloze_number) + '::' + answer + '}}'
 
@@ -40,10 +40,3 @@ class ClozeTranslator:
             if cloze_number not in self.used_cloze_numbers:
                 self.min_unused_cloze_number = cloze_number
                 return cloze_number
-
-
-def get_answer_group(match: re.Match, group_suffix: str) -> str:
-    value = match[f'double_bracket_{group_suffix}']
-    if value is None:
-        value = match[f'single_bracket_{group_suffix}']
-    return value

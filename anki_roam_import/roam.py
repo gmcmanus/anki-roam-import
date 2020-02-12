@@ -53,14 +53,7 @@ def contains_cloze(string: str) -> bool:
     return bool(CLOZE_PATTERN.search(string))
 
 
-def make_cloze_pattern() -> re.Pattern:
-    double_bracket_answer = r'\{\{' + answer_regex('double_bracket') + r'\}\}'
-    single_bracket_answer = r'\{' + answer_regex('single_bracket') + r'\}'
-    return re.compile(f'{double_bracket_answer}|{single_bracket_answer}', flags=re.DOTALL)
-
-
-def answer_regex(group_prefix: str) -> str:
-    return fr'(?:c(?P<{group_prefix}_cloze_number>\d+)::)?(?P<{group_prefix}_answer>.+?)'
-
-
-CLOZE_PATTERN = make_cloze_pattern()
+CLOZE_PATTERN = re.compile(
+    r'(?<!\{)\{(?!\{)(?:c(?P<cloze_number>\d+)::)?(?P<answer>.+?)\}',
+    flags=re.DOTALL,
+)
