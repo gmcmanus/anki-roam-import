@@ -8,8 +8,24 @@ Note = str
 
 def extract_notes(roam_json: JsonData) -> Iterable[Note]:
     for page in roam_json:
-        for block in page['children']:
-            yield block['string']
+        yield from extract_notes_from_children(page)
+
+
+def extract_notes_from_children(page_or_block: JsonData) -> Iterable[Note]:
+    if 'children' not in page_or_block:
+        return
+
+    for block in page_or_block['children']:
+        string = block['string']
+
+        if contains_note(string):
+            yield string
+
+        yield from extract_notes_from_children(block)
+
+
+def contains_note(string):
+    return '{' in string and '}' in string
 
 
 class NoteAdder:
