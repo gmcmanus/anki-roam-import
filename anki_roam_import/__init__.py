@@ -1,12 +1,15 @@
 from typing import Iterable, Union, Dict, Any, List
 
-
-JsonData = Union[None, bool, str, float, int, List['JsonData'], Dict[str, 'JsonData']]
+# PyCharm doesn't infer well with:
+# JsonData = Union[None, bool, str, float, int, List['JsonData'], Dict[str, 'JsonData']]
+JsonData = Any
 Note = str
 
 
 def extract_notes(roam_json: JsonData) -> Iterable[Note]:
-    yield from []
+    for page in roam_json:
+        for block in page['children']:
+            yield block['string']
 
 
 class NoteAdder:

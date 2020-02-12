@@ -20,3 +20,9 @@ def test_extract_from_empty_roam_json():
     roam_json = []
 
     assert list(extract_notes(roam_json)) == []
+
+
+def test_extract_from_single_block():
+    roam_json = [{'children': [{'string': '{note}'}]}]
+
+    assert list(extract_notes(roam_json)) == ['{note}']
