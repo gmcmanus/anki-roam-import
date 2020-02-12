@@ -1,5 +1,6 @@
 import re
 from typing import Iterable, Any
+from itertools import count
 
 # PyCharm doesn't infer well with:
 # JsonData = Union[None, bool, str, float, int, List['JsonData'], Dict[str, 'JsonData']]
@@ -66,16 +67,9 @@ def answer_regex(group_prefix):
     return f'(?:c(?P<{group_prefix}_cloze_number>\d+)::)?(?P<{group_prefix}_answer>.+?)'
 
 
-def get_answer_group(match, group_suffix):
-    value = match[f'double_bracket_{group_suffix}']
-    if value is None:
-        value = match[f'single_bracket_{group_suffix}']
-    return value
-
-
 class ClozeTranslator:
     def __init__(self):
-        self.min_unused_cloze_number = 0
+        self.min_unused_cloze_number = 1
         self.used_cloze_numbers = set()
 
     def __call__(self, match: re.Match) -> str:
@@ -88,13 +82,20 @@ class ClozeTranslator:
         self.used_cloze_numbers.add(cloze_number)
         answer = get_answer_group(match, 'answer')
 
-        return '{{c' + str(self.cloze_number) + '::' + answer + '}}'
+        return '{{c' + str(cloze_number) + '::' + answer + '}}'
 
     def _next_unused_cloze_number(self) -> int:
         for cloze_number in count(self.min_unused_cloze_number):
             if cloze_number not in self.used_cloze_numbers:
                 self.min_unused_cloze_number = cloze_number
                 return cloze_number
+
+
+def get_answer_group(match, group_suffix):
+    value = match[f'double_bracket_{group_suffix}']
+    if value is None:
+        value = match[f'single_bracket_{group_suffix}']
+    return value
 
 
 def import_roam_notes(notes: Iterable[RoamNote], note_adder: NoteAdder) -> None:

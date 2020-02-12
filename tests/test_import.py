@@ -12,7 +12,7 @@ from anki_roam_import import (
     translate_note,
 )
 
-from tests.util import mock, call
+from tests.util import mock, call, map_side_effect
 
 
 def test_import_two_notes():
@@ -224,3 +224,46 @@ def test_translate_note_with_custom_cloze_number_and_double_brackets():
             'double_bracket_cloze_number': '2',
         }),
     ])
+
+
+def test_cloze_translator_simple_match():
+    cloze_translator = ClozeTranslator()
+
+    match = mock(re.Match)
+    map_side_effect(match.__getitem__, {
+        'single_bracket_answer': 'answer',
+    })
+
+    assert cloze_translator(match) == '{{c1::answer}}'
+
+
+def test_cloze_translator_simple_match_double_brackets():
+    cloze_translator = ClozeTranslator()
+
+    match = mock(re.Match)
+    map_side_effect(match.__getitem__, {
+        'double_bracket_answer': 'answer',
+    })
+
+    assert cloze_translator(match) == '{{c1::answer}}'
+
+
+def test_cloze_translator_preserve_cloze_numbers():
+    cloze_translator = ClozeTranslator()
+    match = mock(re.Match)
+
+    map_side_effect(match.__getitem__, {
+        'single_bracket_cloze_number': '2',
+        'single_bracket_answer': 'answer2',
+    })
+    assert cloze_translator(match) == '{{c2::answer2}}'
+
+    map_side_effect(match.__getitem__, {
+        'single_bracket_answer': 'answer1',
+    })
+    assert cloze_translator(match) == '{{c1::answer1}}'
+
+    map_side_effect(match.__getitem__, {
+        'single_bracket_answer': 'answer3',
+    })
+    assert cloze_translator(match) == '{{c3::answer3}}'
