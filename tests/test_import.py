@@ -75,3 +75,7 @@ def test_add_note():
 
 def test_translate_simple_note():
     assert translate_note('{note}') == '{{c1::note}}'
+
+
+def test_translate_simple_note_with_two_deletions():
+    assert translate_note('{first} {second}') == '{{c1::first}} {{c2::second}}'

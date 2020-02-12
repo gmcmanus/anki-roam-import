@@ -48,10 +48,19 @@ class NoteAdder:
 def translate_note(roam_note: RoamNote) -> AnkiNote:
     return re.sub(
         pattern=r'\{(?P<answer>.+?)\}',
-        repl=r'{{c1::\g<answer>}}',
+        repl=ClozeTranslator(),
         string=roam_note,
         flags=re.DOTALL,
     )
+
+
+class ClozeTranslator:
+    def __init__(self):
+        self.cloze_number = 0
+
+    def __call__(self, match):
+        self.cloze_number += 1
+        return '{{c' + str(self.cloze_number) + '::' + match['answer'] + '}}'
 
 
 def import_roam_notes(notes: Iterable[RoamNote], note_adder: NoteAdder) -> None:
