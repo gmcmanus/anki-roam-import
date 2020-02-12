@@ -47,6 +47,13 @@ def test_extract_from_single_block():
     assert list(extract_notes(roam_json)) == [note]
 
 
+def test_extract_malformed_brackets():
+    note = '}note{'
+    roam_json = [page(block(note))]
+
+    assert list(extract_notes(roam_json)) == []
+
+
 def test_extract_from_child_blocks():
     note = '{note}'
     roam_json = [page(block('parent string', block(note)))]
@@ -106,6 +113,22 @@ def make_cloze_translator(dict_cloze_translator: Callable[[Dict[str, str]], str]
     def cloze_translator(match: re.Match):
         return dict_cloze_translator(match.groupdict())
     return cloze_translator
+
+
+def test_translate_simple_note_with_newline():
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    answer = 'roam\n'
+    assert translate_note('{' + answer + '}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': answer,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': None,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
 
 
 def test_translate_simple_note_with_two_clozes():

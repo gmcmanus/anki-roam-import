@@ -22,14 +22,14 @@ def extract_notes_from_children(page_or_block: JsonData) -> Iterable[RoamNote]:
     for block in page_or_block['children']:
         string = block['string']
 
-        if contains_note(string):
+        if contains_cloze(string):
             yield string
 
         yield from extract_notes_from_children(block)
 
 
-def contains_note(string: str) -> bool:
-    return '{' in string and '}' in string
+def contains_cloze(string: str) -> bool:
+    return bool(CLOZE_PATTERN.search(string))
 
 
 class AnkiDeck:
@@ -56,19 +56,20 @@ class NoteTranslator:
 
 
 def translate_note(roam_note: RoamNote, cloze_translator: 'ClozeTranslator') -> AnkiNote:
+    return CLOZE_PATTERN.sub(cloze_translator, roam_note)
+
+
+def make_cloze_pattern() -> re.Pattern:
     double_bracket_answer = r'\{\{' + answer_regex('double_bracket') + r'\}\}'
     single_bracket_answer = r'\{' + answer_regex('single_bracket') + r'\}'
-
-    return re.sub(
-        pattern=f'{double_bracket_answer}|{single_bracket_answer}',
-        repl=cloze_translator,
-        string=roam_note,
-        flags=re.DOTALL,
-    )
+    return re.compile(f'{double_bracket_answer}|{single_bracket_answer}', flags=re.DOTALL)
 
 
 def answer_regex(group_prefix: str) -> str:
     return fr'(?:c(?P<{group_prefix}_cloze_number>\d+)::)?(?P<{group_prefix}_answer>.+?)'
+
+
+CLOZE_PATTERN = make_cloze_pattern()
 
 
 class ClozeTranslator:

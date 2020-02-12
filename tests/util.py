@@ -2,7 +2,7 @@ from typing import Mapping, Optional, Any
 from unittest.mock import create_autospec, call, Mock
 
 
-__all__ = ['mock', 'call']
+__all__ = ['mock', 'call', 'map_side_effect']
 
 
 def mock(spec: Any = None, *, instance: Optional[bool] = None, **kwargs) -> Any:
