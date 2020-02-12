@@ -21,7 +21,7 @@ def generate_json_files(path: str) -> Iterable[TextIO]:
         with ZipFile(path) as zip_file:
             for name in zip_file.namelist():
                 if is_json_path(name):
-                    with file.open(name) as file:
+                    with zip_file.open(name) as file:
                         yield file
     else:
         raise RuntimeError(f'Unknown file type: {path!r}')
