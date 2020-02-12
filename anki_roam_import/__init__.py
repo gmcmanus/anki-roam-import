@@ -1,5 +1,5 @@
 import re
-from typing import Iterable, Any
+from typing import Iterable, Any, Callable
 from itertools import count
 
 # PyCharm doesn't infer well with:
@@ -47,8 +47,11 @@ class NoteAdder:
 
 
 class NoteTranslator:
+    def __init__(self, cloze_translator_factory: Callable[[], 'ClozeTranslator']):
+        self.cloze_translator_factory = cloze_translator_factory
+
     def translate_note(self, roam_note: RoamNote) -> AnkiNote:
-        pass
+        return translate_note(roam_note, self.cloze_translator_factory())
 
 
 def translate_note(roam_note: RoamNote, cloze_translator: 'ClozeTranslator') -> AnkiNote:

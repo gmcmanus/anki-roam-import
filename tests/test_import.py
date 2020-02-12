@@ -267,3 +267,13 @@ def test_cloze_translator_preserve_cloze_numbers():
         'single_bracket_answer': 'answer3',
     })
     assert cloze_translator(match) == '{{c3::answer3}}'
+
+
+def test_note_translator():
+    first_cloze_translator = mock(ClozeTranslator, return_value='first translation')
+    second_cloze_translator = mock(ClozeTranslator, return_value='second translation')
+    cloze_translator_factory = mock(side_effect=[first_cloze_translator, second_cloze_translator])
+    note_translator = NoteTranslator(cloze_translator_factory)
+
+    assert note_translator.translate_note('{first note}') == 'first translation'
+    assert note_translator.translate_note('{second note}') == 'second translation'
