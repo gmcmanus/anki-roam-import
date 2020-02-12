@@ -46,8 +46,8 @@ class NoteAdder:
 
 
 def translate_note(roam_note: RoamNote) -> AnkiNote:
-    double_bracket_answer = r'\{\{' + answer_regex('double_bracket_answer') + r'\}\}'
-    single_bracket_answer = r'\{' + answer_regex('single_bracket_answer') + r'\}'
+    double_bracket_answer = r'\{\{' + answer_regex('double_bracket') + r'\}\}'
+    single_bracket_answer = r'\{' + answer_regex('single_bracket') + r'\}'
 
     return re.sub(
         pattern=f'{double_bracket_answer}|{single_bracket_answer}',
@@ -57,8 +57,15 @@ def translate_note(roam_note: RoamNote) -> AnkiNote:
     )
 
 
-def answer_regex(group_name):
-    return f'(?P<{group_name}>.+?)'
+def answer_regex(group_prefix):
+    return f'(?:c(?P<{group_prefix}_cloze_number>\d+)::)?(?P<{group_prefix}_answer>.+?)'
+
+
+def get_answer_group(match, group_suffix):
+    value = match[f'double_bracket_{group_suffix}']
+    if value is None:
+        value = match[f'single_bracket_{group_suffix}']
+    return value
 
 
 class ClozeTranslator:
@@ -66,11 +73,13 @@ class ClozeTranslator:
         self.cloze_number = 0
 
     def __call__(self, match):
-        self.cloze_number += 1
+        cloze_number = get_answer_group(match, 'cloze_number')
+        if cloze_number is not None:
+            self.cloze_number = cloze_number
+        else:
+            self.cloze_number += 1
 
-        answer = match['double_bracket_answer']
-        if answer is None:
-            answer = match['single_bracket_answer']
+        answer = get_answer_group(match, 'answer')
 
         return '{{c' + str(self.cloze_number) + '::' + answer + '}}'
 

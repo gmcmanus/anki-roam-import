@@ -74,7 +74,7 @@ def test_add_note():
 
 
 def test_translate_simple_note():
-    assert translate_note('{note}') == '{{c1::note}}'
+    assert translate_note('{answer}') == '{{c1::answer}}'
 
 
 def test_translate_simple_note_with_two_deletions():
@@ -82,4 +82,20 @@ def test_translate_simple_note_with_two_deletions():
 
 
 def test_translate_note_with_double_brackets():
-    assert translate_note('{{note}}') == '{{c1::note}}'
+    assert translate_note('{{answer}}') == '{{c1::answer}}'
+
+
+def test_translate_note_with_hint():
+    assert translate_note('{answer::hint}') == '{{c1::answer::hint}}'
+
+
+def test_translate_note_with_custom_cloze_number():
+    assert translate_note('{c2::answer}') == '{{c2::answer}}'
+
+
+def test_translate_note_with_custom_cloze_number_and_double_brackets():
+    assert translate_note('{{c2::answer}}') == '{{c2::answer}}'
+
+
+def test_translate_note_with_custom_cloze_number_and_hint():
+    assert translate_note('{c2::answer::hint}') == '{{c2::answer::hint}}'
