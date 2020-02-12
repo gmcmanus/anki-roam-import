@@ -1,4 +1,16 @@
-from anki_roam_import import NoteAdder, import_roam_notes, extract_notes, JsonData, AnkiDeck, translate_note
+import re
+from typing import Dict, Callable
+
+from anki_roam_import import (
+    NoteAdder,
+    import_roam_notes,
+    extract_notes,
+    JsonData,
+    AnkiDeck,
+    ClozeTranslator,
+    NoteTranslator,
+    translate_note,
+)
 
 from tests.util import mock, call
 
@@ -59,13 +71,14 @@ def test_add_note():
     roam_note = 'roam note'
     anki_note = 'anki note'
 
-    note_translator = mock(translate_note, return_value=anki_note)
+    note_translator = mock(NoteTranslator)
+    note_translator.translate_note.return_value = anki_note
     deck = mock(AnkiDeck)
     note_adder = NoteAdder(note_translator, deck)
 
     note_adder.add_roam_note(roam_note)
 
-    note_translator.assert_has_calls([
+    note_translator.translate_note.assert_has_calls([
         call(roam_note),
     ])
     deck.add_anki_note.assert_has_calls([
@@ -74,28 +87,140 @@ def test_add_note():
 
 
 def test_translate_simple_note():
-    assert translate_note('{answer}') == '{{c1::answer}}'
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    answer = 'roam'
+    assert translate_note('{' + answer + '}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': answer,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': None,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
 
 
-def test_translate_simple_note_with_two_deletions():
-    assert translate_note('{first} {second}') == '{{c1::first}} {{c2::second}}'
+def make_cloze_translator(dict_cloze_translator: Callable[[Dict[str, str]], str]):
+    def cloze_translator(match: re.Match):
+        return dict_cloze_translator(match.groupdict())
+    return cloze_translator
+
+
+def test_translate_simple_note_with_two_clozes():
+    first_translation = 'anki1'
+    second_translation = 'anki2'
+    dict_cloze_translator = mock(side_effect=[first_translation, second_translation])
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    first_answer = 'roam1'
+    second_answer = 'roam1'
+    translation = translate_note(f'{{{first_answer}}} {{{{{second_answer}}}}}', cloze_translator)
+    assert translation == f'{first_translation} {second_translation}'
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': first_answer,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': None,
+            'double_bracket_cloze_number': None,
+        }),
+        call({
+            'single_bracket_answer': None,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': second_answer,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
 
 
 def test_translate_note_with_double_brackets():
-    assert translate_note('{{answer}}') == '{{c1::answer}}'
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    answer = 'roam'
+    assert translate_note('{{' + answer + '}}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': None,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': answer,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
 
 
-def test_translate_note_with_hint():
-    assert translate_note('{answer::hint}') == '{{c1::answer::hint}}'
+def test_translate_cloze_with_hint():
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    answer_and_hint = 'answer::hint'
+    assert translate_note('{' + answer_and_hint + '}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': answer_and_hint,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': None,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
+
+
+def test_translate_cloze_with_hint_and_double_brackets():
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    answer_and_hint = 'answer::hint'
+    assert translate_note('{{' + answer_and_hint + '}}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': None,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': answer_and_hint,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
 
 
 def test_translate_note_with_custom_cloze_number():
-    assert translate_note('{c2::answer}') == '{{c2::answer}}'
-
-
-def test_translate_note_with_custom_cloze_number_and_double_brackets():
-    assert translate_note('{{c2::answer}}') == '{{c2::answer}}'
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    assert translate_note('{c2::answer}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': 'answer',
+            'single_bracket_cloze_number': '2',
+            'double_bracket_answer': None,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
 
 
 def test_translate_note_with_custom_cloze_number_and_hint():
-    assert translate_note('{c2::answer::hint}') == '{{c2::answer::hint}}'
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    assert translate_note('{c2::answer::hint}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': 'answer::hint',
+            'single_bracket_cloze_number': '2',
+            'double_bracket_answer': None,
+            'double_bracket_cloze_number': None,
+        }),
+    ])
+
+
+def test_translate_note_with_custom_cloze_number_and_double_brackets():
+    translation = 'anki'
+    dict_cloze_translator = mock(return_value=translation)
+    cloze_translator = make_cloze_translator(dict_cloze_translator)
+    assert translate_note('{{c2::answer}}', cloze_translator) == translation
+    dict_cloze_translator.assert_has_calls([
+        call({
+            'single_bracket_answer': None,
+            'single_bracket_cloze_number': None,
+            'double_bracket_answer': 'answer',
+            'double_bracket_cloze_number': '2',
+        }),
+    ])

@@ -1,5 +1,5 @@
 import re
-from typing import Iterable, Any, Callable
+from typing import Iterable, Any
 
 # PyCharm doesn't infer well with:
 # JsonData = Union[None, bool, str, float, int, List['JsonData'], Dict[str, 'JsonData']]
@@ -36,22 +36,27 @@ class AnkiDeck:
 
 
 class NoteAdder:
-    def __init__(self, note_translator: Callable[[RoamNote], AnkiNote], deck: AnkiDeck):
+    def __init__(self, note_translator: 'NoteTranslator', deck: AnkiDeck):
         self.note_translator = note_translator
         self.deck = deck
 
     def add_roam_note(self, roam_note: RoamNote) -> None:
-        anki_note = self.note_translator(roam_note)
+        anki_note = self.note_translator.translate_note(roam_note)
         self.deck.add_anki_note(anki_note)
 
 
-def translate_note(roam_note: RoamNote) -> AnkiNote:
+class NoteTranslator:
+    def translate_note(self, roam_note: RoamNote) -> AnkiNote:
+        pass
+
+
+def translate_note(roam_note: RoamNote, cloze_translator: 'ClozeTranslator') -> AnkiNote:
     double_bracket_answer = r'\{\{' + answer_regex('double_bracket') + r'\}\}'
     single_bracket_answer = r'\{' + answer_regex('single_bracket') + r'\}'
 
     return re.sub(
         pattern=f'{double_bracket_answer}|{single_bracket_answer}',
-        repl=ClozeTranslator(),
+        repl=cloze_translator,
         string=roam_note,
         flags=re.DOTALL,
     )
@@ -70,18 +75,26 @@ def get_answer_group(match, group_suffix):
 
 class ClozeTranslator:
     def __init__(self):
-        self.cloze_number = 0
+        self.min_unused_cloze_number = 0
+        self.used_cloze_numbers = set()
 
-    def __call__(self, match):
+    def __call__(self, match: re.Match) -> str:
         cloze_number = get_answer_group(match, 'cloze_number')
         if cloze_number is not None:
-            self.cloze_number = cloze_number
+            cloze_number = int(cloze_number)
         else:
-            self.cloze_number += 1
+            cloze_number = self._next_unused_cloze_number()
 
+        self.used_cloze_numbers.add(cloze_number)
         answer = get_answer_group(match, 'answer')
 
         return '{{c' + str(self.cloze_number) + '::' + answer + '}}'
+
+    def _next_unused_cloze_number(self) -> int:
+        for cloze_number in count(self.min_unused_cloze_number):
+            if cloze_number not in self.used_cloze_numbers:
+                self.min_unused_cloze_number = cloze_number
+                return cloze_number
 
 
 def import_roam_notes(notes: Iterable[RoamNote], note_adder: NoteAdder) -> None:
