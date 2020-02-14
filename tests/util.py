@@ -23,32 +23,33 @@ class when:
         self.mock = mock
 
     def called_with(self, *args, **kwargs):
-        return CalledWith(self.mock, args, kwargs)
+        return CalledWith(self.mock, *args, **kwargs)
 
 
 class CalledWith:
-    def __init__(self, mock, args, kwargs):
+    def __init__(self, mock, *args, **kwargs):
         self.mock = mock
         self.signature = signature(self.mock)
-        self.arguments = self._normalized_arguments(args, kwargs)
+        self.arguments = self._normalized_arguments(*args, **kwargs)
 
-    def _normalized_arguments(self, args, kwargs):
+    def _normalized_arguments(self, *args, **kwargs):
         bound_arguments = self.signature.bind(*args, **kwargs)
         bound_arguments.apply_defaults()
         return dict(bound_arguments.arguments)
 
     def then_return(self, value):
-        if self.mock.side_effect is None:
-            def fall_back(args, kwargs):
+        original_side_effect = self.mock.side_effect
+
+        if original_side_effect is None:
+            def fall_back(*args, **kwargs):
                 return DEFAULT
-        elif callable(self.mock.side_effect):
-            def fall_back(args, kwargs):
-                return self.mock.side_effect(*args, **kwargs)
+        elif callable(original_side_effect):
+            fall_back = original_side_effect
         else:
             raise ValueError
 
         def side_effect(*args, **kwargs):
-            if self._normalized_arguments(args, kwargs) == self.arguments:
+            if self._normalized_arguments(*args, **kwargs) == self.arguments:
                 return value
             return fall_back(*args, **kwargs)
 
