@@ -38,7 +38,7 @@ def test_unnumbered_then_numbered_cloze(cloze_enumerator):
     assert result == [replace(unnumbered_cloze, number=2), numbered_cloze]
 
 
-def test_renumber_zero_numbered_cloze(cloze_enumerator):
+def test_renumber_invalid_numbered_cloze(cloze_enumerator):
     cloze = Cloze('content', number=0)
     result = list(cloze_enumerator([cloze]))
     assert result == [replace(cloze, number=1)]

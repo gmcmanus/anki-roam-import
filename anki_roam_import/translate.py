@@ -5,15 +5,16 @@ from .model import RoamNote, AnkiNote
 from .roam import CLOZE_PATTERN
 
 
-def translate_note(
-    roam_note: RoamNote,
-    note_splitter: 'NoteSplitter',
-    cloze_enumerator: 'ClozeEnumerator',
-    note_joiner: 'NoteJoiner',
-) -> AnkiNote:
-    note_parts = list(note_splitter(roam_note))
-    numbered_parts = cloze_enumerator(note_parts)
-    return note_joiner(numbered_parts)
+@dataclass
+class NoteTranslator:
+    note_splitter: 'NoteSplitter'
+    cloze_enumerator: 'ClozeEnumerator'
+    note_joiner: 'NoteJoiner'
+
+    def __call__(self, roam_note: RoamNote) -> AnkiNote:
+        note_parts = list(self.note_splitter(roam_note))
+        numbered_parts = self.cloze_enumerator(note_parts)
+        return self.note_joiner(numbered_parts)
 
 
 @dataclass
@@ -65,6 +66,24 @@ def has_valid_number(cloze: Cloze) -> bool:
     return cloze.number and cloze.number > 0
 
 
+@dataclass
 class NoteJoiner:
+    anki_cloze_formatter: 'AnkiClozeFormatter'
+
     def __call__(self, parts: Iterable[NotePart]) -> AnkiNote:
-        pass
+        def formatted_parts():
+            for part in parts:
+                if isinstance(part, Cloze):
+                    yield self.anki_cloze_formatter(part)
+                else:
+                    yield part
+
+        return ''.join(formatted_parts())
+
+
+class AnkiClozeFormatter:
+    def __call__(self, numbered_cloze: Cloze) -> AnkiNote:
+        if not has_valid_number(numbered_cloze):
+            raise ValueError
+
+        return '{{c' + str(numbered_cloze.number) + '::' + numbered_cloze.content + '}}'
