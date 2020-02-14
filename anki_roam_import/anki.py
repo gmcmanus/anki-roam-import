@@ -82,7 +82,8 @@ class AddedNotes:
 
 
 def added_notes_path():
-    user_files_path = os.path.join(mw.addonManager.addonsFolder(__name__), 'user_files')
+    module_name = __name__.split('.')[0]
+    user_files_path = os.path.join(mw.addonManager.addonsFolder(module_name), 'user_files')
     os.makedirs(user_files_path, exist_ok=True)
     return os.path.join(user_files_path, 'added_notes.json')
 
