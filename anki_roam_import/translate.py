@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, replace
 from typing import Optional, List, Union, Iterable
 
@@ -7,14 +8,21 @@ from .roam import CLOZE_PATTERN
 
 @dataclass
 class NoteTranslator:
+    note_cleaner: 'RoamNoteCleaner'
     note_splitter: 'NoteSplitter'
     cloze_enumerator: 'ClozeEnumerator'
     note_joiner: 'NoteJoiner'
 
     def __call__(self, roam_note: RoamNote) -> AnkiNote:
-        note_parts = list(self.note_splitter(roam_note))
+        clean_note = self.note_cleaner(roam_note)
+        note_parts = list(self.note_splitter(clean_note))
         numbered_parts = self.cloze_enumerator(note_parts)
         return self.note_joiner(numbered_parts)
+
+
+class RoamNoteCleaner:
+    def __call__(self, roam_note: RoamNote) -> RoamNote:
+        return re.sub(r'\[\[|\]\]', '', roam_note)
 
 
 @dataclass
@@ -89,4 +97,9 @@ class AnkiClozeFormatter:
         return '{{c' + str(numbered_cloze.number) + '::' + numbered_cloze.content + '}}'
 
 
-translate_note = NoteTranslator(NoteSplitter(), ClozeEnumerator(), NoteJoiner(AnkiClozeFormatter()))
+translate_note = NoteTranslator(
+    RoamNoteCleaner(),
+    NoteSplitter(),
+    ClozeEnumerator(),
+    NoteJoiner(AnkiClozeFormatter()),
+)
