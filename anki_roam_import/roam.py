@@ -53,7 +53,16 @@ def contains_cloze(string: str) -> bool:
     return bool(CLOZE_PATTERN.search(string))
 
 
+# noinspection RegExpRedundantEscape
 CLOZE_PATTERN = re.compile(
-    r'(?<!\{)\{(?!\{)(?:c(?P<number>\d+)::)?(?P<content>.+?)\}',
-    flags=re.DOTALL,
+    r'''
+        (?<!\{)                 # don't match double bracket behind
+        \{                      # opening bracket
+        (?!\{)                  # don't match double bracket ahead
+        (?:c(?P<number>\d+)\|)? # optional cloze number
+        (?P<content>.+?)        # content
+        (?:\|(?P<hint>.+?))?    # optional hint
+        \}                      # closing bracket
+    ''',
+    flags=re.VERBOSE | re.DOTALL,
 )

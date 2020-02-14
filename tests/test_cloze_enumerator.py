@@ -20,19 +20,19 @@ def test_just_numbered_cloze(cloze_enumerator):
 
 
 def test_just_unnumbered_cloze(cloze_enumerator):
-    unnumbered_cloze = Cloze('content', number=None)
+    unnumbered_cloze = Cloze('content')
     assert list(cloze_enumerator([unnumbered_cloze])) == [replace(unnumbered_cloze, number=1)]
 
 
 def test_numbered_then_unnumbered_cloze(cloze_enumerator):
     numbered_cloze = Cloze('content2', number=2)
-    unnumbered_cloze = Cloze('content1', number=None)
+    unnumbered_cloze = Cloze('content1')
     result = list(cloze_enumerator([numbered_cloze, unnumbered_cloze]))
     assert result == [numbered_cloze, replace(unnumbered_cloze, number=1)]
 
 
 def test_unnumbered_then_numbered_cloze(cloze_enumerator):
-    unnumbered_cloze = Cloze('content2', number=None)
+    unnumbered_cloze = Cloze('content2')
     numbered_cloze = Cloze('content1', number=1)
     result = list(cloze_enumerator([unnumbered_cloze, numbered_cloze]))
     assert result == [replace(unnumbered_cloze, number=2), numbered_cloze]

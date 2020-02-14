@@ -28,7 +28,8 @@ class RoamNoteCleaner:
 @dataclass
 class Cloze:
     content: str
-    number: Optional[int]
+    hint: Optional[str] = None
+    number: Optional[int] = None
 
 
 NotePart = Union[Cloze, str]
@@ -47,7 +48,7 @@ class NoteSplitter:
             match_number = match['number']
             number = int(match_number) if match_number else None
 
-            yield Cloze(match['content'], number)
+            yield Cloze(match['content'], match['hint'], number)
 
         text = note[index:]
         if text:
@@ -94,7 +95,12 @@ class AnkiClozeFormatter:
         if not has_valid_number(numbered_cloze):
             raise ValueError
 
-        return '{{c' + str(numbered_cloze.number) + '::' + numbered_cloze.content + '}}'
+        if numbered_cloze.hint is not None:
+            hint = f'::{numbered_cloze.hint}'
+        else:
+            hint = ''
+
+        return '{{' + f'c{numbered_cloze.number}::{numbered_cloze.content}{hint}' + '}}'
 
 
 translate_note = NoteTranslator(

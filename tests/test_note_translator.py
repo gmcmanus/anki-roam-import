@@ -21,7 +21,7 @@ def test_translate_simple_note():
     when(note_cleaner).called_with(roam_note).then_return(clean_note)
 
     note_splitter = mock(NoteSplitter)
-    cloze = Cloze('content', number=None)
+    cloze = Cloze('content')
     when(note_splitter).called_with(clean_note).then_return([cloze])
 
     cloze_enumerator = mock(ClozeEnumerator)

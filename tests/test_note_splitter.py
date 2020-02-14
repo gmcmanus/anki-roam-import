@@ -9,31 +9,34 @@ def note_splitter():
 
 
 def test_simple_note(note_splitter):
-    assert list(note_splitter('{content}')) == [Cloze(content='content', number=None)]
+    assert list(note_splitter('{content}')) == [Cloze(content='content')]
 
+
+def test_simple_note_with_double_brackets(note_splitter):
+    assert list(note_splitter('{{content}}')) == ['{{content}}']
 
 def test_simple_note_with_newline(note_splitter):
-    assert list(note_splitter('{con\ntent}')) == [Cloze(content='con\ntent', number=None)]
+    assert list(note_splitter('{con\ntent}')) == [Cloze(content='con\ntent')]
 
 
 def test_simple_note_with_hint(note_splitter):
-    assert list(note_splitter('{content::hint}')) == [Cloze(content='content::hint', number=None)]
+    assert list(note_splitter('{content|hint}')) == [Cloze(content='content', hint='hint')]
 
 
 def test_note_with_cloze_number(note_splitter):
-    assert list(note_splitter('{c0::content}')) == [Cloze(content='content', number=0)]
+    assert list(note_splitter('{c0|content}')) == [Cloze(content='content', number=0)]
 
 
 def test_note_with_cloze_number_and_hint(note_splitter):
-    assert list(note_splitter('{c0::content::hint}')) == [Cloze(content='content::hint', number=0)]
+    assert list(note_splitter('{c0|content|hint}')) == [Cloze(content='content', hint='hint', number=0)]
 
 
 def test_note_with_cloze_then_text(note_splitter):
-    assert list(note_splitter('{c1::content} text')) == [Cloze(content='content', number=1), ' text']
+    assert list(note_splitter('{c1|content} text')) == [Cloze(content='content', number=1), ' text']
 
 
 def test_note_with_text_then_cloze(note_splitter):
-    assert list(note_splitter('text{c1::content}')) == ['text', Cloze(content='content', number=1)]
+    assert list(note_splitter('text{c1|content}')) == ['text', Cloze(content='content', number=1)]
 
 
 def test_note_with_just_text(note_splitter):

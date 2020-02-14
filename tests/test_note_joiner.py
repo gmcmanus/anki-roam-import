@@ -42,13 +42,15 @@ def test_format_numbered_cloze(anki_cloze_formatter):
     assert anki_cloze_formatter(Cloze('content', number=1)) == '{{c1::content}}'
 
 
+def test_format_numbered_cloze_with_hint(anki_cloze_formatter):
+    assert anki_cloze_formatter(Cloze('content', 'hint', number=1)) == '{{c1::content::hint}}'
+
+
 def test_format_unnumbered_cloze(anki_cloze_formatter):
     with pytest.raises(ValueError):
-        anki_cloze_formatter(Cloze('content', number=None))
+        anki_cloze_formatter(Cloze('content'))
 
 
 def test_format_zero_numbered_cloze(anki_cloze_formatter):
     with pytest.raises(ValueError):
         anki_cloze_formatter(Cloze('content', number=0))
-
-
