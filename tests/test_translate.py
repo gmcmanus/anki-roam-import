@@ -1,43 +1,34 @@
 import re
-from typing import Callable, Dict, Match
+from dataclasses import replace
 
-from anki_roam_import.translate import translate_note, ClozeTranslator, NoteTranslator
+from anki_roam_import.translate import (
+    translate_note,
+    Cloze,
+    NoteSplitter,
+    ClozeEnumerator,
+    NoteJoiner,
+)
 
-from tests.util import mock, call, map_side_effect
+from tests.util import mock, call, when
 
 
 def test_translate_simple_note():
-    translation = 'anki'
-    dict_cloze_translator = mock(return_value=translation)
-    cloze_translator = make_cloze_translator(dict_cloze_translator)
-    answer = 'roam'
-    assert translate_note('{' + answer + '}', cloze_translator) == translation
-    dict_cloze_translator.assert_has_calls([
-        call({
-            'answer': answer,
-            'cloze_number': None,
-        }),
-    ])
+    content = 'content'
+    note = '{' + content + '}'
 
+    note_splitter = mock(NoteSplitter)
+    cloze = Cloze(content, number=None)
+    when(note_splitter).called_with(note).then_return([cloze])
 
-def make_cloze_translator(dict_cloze_translator: Callable[[Dict[str, str]], str]):
-    def cloze_translator(match: Match[str]):
-        return dict_cloze_translator(match.groupdict())
-    return cloze_translator
+    cloze_enumerator = mock(ClozeEnumerator)
+    numbered_cloze = replace(cloze, number=1)
+    when(cloze_enumerator).called_with([cloze]).then_return([numbered_cloze])
 
+    note_joiner = mock(NoteJoiner)
+    joined_note = '{{c1::content}}'
+    when(note_joiner).called_with([numbered_cloze]).then_return(joined_note)
 
-def test_translate_simple_note_with_newline():
-    translation = 'anki'
-    dict_cloze_translator = mock(return_value=translation)
-    cloze_translator = make_cloze_translator(dict_cloze_translator)
-    answer = 'roam\n'
-    assert translate_note('{' + answer + '}', cloze_translator) == translation
-    dict_cloze_translator.assert_has_calls([
-        call({
-            'answer': answer,
-            'cloze_number': None,
-        }),
-    ])
+    assert translate_note(note, note_splitter, cloze_enumerator, note_joiner) == joined_note
 
 
 def test_translate_simple_note_with_two_clozes():

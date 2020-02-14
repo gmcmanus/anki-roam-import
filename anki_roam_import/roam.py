@@ -54,6 +54,6 @@ def contains_cloze(string: str) -> bool:
 
 
 CLOZE_PATTERN = re.compile(
-    r'(?<!\{)\{(?!\{)(?:c(?P<cloze_number>\d+)::)?(?P<answer>.+?)\}',
+    r'(?<!\{)\{(?!\{)(?:c(?P<number>\d+)::)?(?P<content>.+?)\}',
     flags=re.DOTALL,
 )
