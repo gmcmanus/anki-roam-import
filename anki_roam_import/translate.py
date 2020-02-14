@@ -87,3 +87,6 @@ class AnkiClozeFormatter:
             raise ValueError
 
         return '{{c' + str(numbered_cloze.number) + '::' + numbered_cloze.content + '}}'
+
+
+translate_note = NoteTranslator(NoteSplitter(), ClozeEnumerator(), NoteJoiner(AnkiClozeFormatter()))

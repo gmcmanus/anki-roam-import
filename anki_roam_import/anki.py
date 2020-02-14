@@ -10,7 +10,7 @@ from aqt.qt import QAction
 from aqt.utils import getFile, showInfo
 
 from .roam import extract_notes_from_path
-from .translate import NoteTranslator, ClozeTranslator
+from .translate import translate_note
 
 
 def plugin_main():
@@ -32,8 +32,7 @@ def import_roam_notes_into_anki():
         return
 
     roam_notes = extract_notes_from_path(path)
-    note_translator = NoteTranslator(ClozeTranslator)
-    anki_notes = list(map(note_translator.translate_note, roam_notes))
+    anki_notes = list(map(translate_note, roam_notes))
     notes_to_add = [NoteData(content, source='') for content in anki_notes]
 
     config = mw.addonManager.getConfig(__name__)

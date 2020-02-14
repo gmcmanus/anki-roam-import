@@ -6,6 +6,7 @@ from anki_roam_import.translate import (
     NoteSplitter,
     ClozeEnumerator,
     NoteJoiner,
+    translate_note,
 )
 
 from tests.util import mock, when
@@ -30,3 +31,7 @@ def test_translate_simple_note():
     note_translator = NoteTranslator(note_splitter, cloze_enumerator, note_joiner)
 
     assert note_translator(note) == joined_note
+
+
+def test_translate_note_wiring():
+    assert translate_note('{content} text') == '{{c1::content}} text'
