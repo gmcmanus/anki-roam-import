@@ -60,7 +60,7 @@ def import_roam_notes_into_anki():
 
         num_duplicates = len(notes_to_add) - num_notes_added
         if num_duplicates:
-            yield f'{num_duplicates} duplicate notes ignored'
+            yield f'{num_duplicates} notes were imported before and were not imported again'
 
     showInfo(', '.join(info()) + '.')
 
