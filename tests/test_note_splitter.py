@@ -16,8 +16,16 @@ def test_simple_note_with_newline(note_splitter):
     assert list(note_splitter('{con\ntent}')) == [Cloze(content='con\ntent', number=None)]
 
 
+def test_simple_note_with_hint(note_splitter):
+    assert list(note_splitter('{content::hint}')) == [Cloze(content='content::hint', number=None)]
+
+
 def test_note_with_cloze_number(note_splitter):
-    assert list(note_splitter('{c1::content}')) == [Cloze(content='content', number=1)]
+    assert list(note_splitter('{c0::content}')) == [Cloze(content='content', number=0)]
+
+
+def test_note_with_cloze_number_and_hint(note_splitter):
+    assert list(note_splitter('{c0::content::hint}')) == [Cloze(content='content::hint', number=0)]
 
 
 def test_note_with_cloze_then_text(note_splitter):
