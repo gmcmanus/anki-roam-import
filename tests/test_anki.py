@@ -12,5 +12,5 @@ def test_extract_then_translate():
 
     assert anki_notes == [AnkiNote(
         anki_content='{{c1::cloze}} text',
-        source="reference\nNote from Roam page 'title'.",
+        source="reference<br/>Note from Roam page 'title'.",
     )]

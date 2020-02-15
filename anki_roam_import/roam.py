@@ -102,7 +102,7 @@ class SourceBuilder:
     def __call__(self, block: JsonData, parents: List[JsonData]) -> str:
         source = self.source_finder(block, parents)
         page = parents[0]
-        return self.source_formatter(source, page)
+        return self.source_formatter(block, source, page)
 
 
 @dataclass
@@ -206,22 +206,24 @@ SOURCE_PATTERN = re.compile(
 class SourceFormatter:
     time_formatter: 'TimeFormatter'
 
-    def __call__(self, source: Optional[str], page: JsonData) -> str:
+    def __call__(
+        self, block: JsonData, source: Optional[str], page: JsonData,
+    ) -> str:
         title = page['title']
         formatted_source = f"Note from Roam page '{title}'"
 
-        if 'create-time' in page:
-            create_time = self.time_formatter(page['create-time'])
+        if 'create-time' in block:
+            create_time = self.time_formatter(block['create-time'])
             formatted_source += f', created at {create_time}'
 
-        if 'edit-time' in page:
-            edit_time = self.time_formatter(page['edit-time'])
+        if 'edit-time' in block:
+            edit_time = self.time_formatter(block['edit-time'])
             formatted_source += f', edited at {edit_time}'
 
         formatted_source += '.'
 
         if source is not None:
-            formatted_source = f'{source}\n{formatted_source}'
+            formatted_source = f'{source}<br/>{formatted_source}'
 
         return formatted_source
 

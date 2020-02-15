@@ -33,7 +33,7 @@ def test_source_builder(source_builder, mock_source_finder, mock_source_formatte
      .then_return('found source'))
 
     (when(mock_source_formatter)
-     .called_with('found source', page_json)
+     .called_with(child_block_json, 'found source', page_json)
      .then_return('formatted source'))
 
     assert source_builder(child_block_json, [page_json, parent_block_json]) == 'formatted source'
@@ -155,13 +155,14 @@ def mock_time_formatter() -> TimeFormatter:
 def test_format_source(source_formatter, mock_time_formatter):
     create_time = 1337
     edit_time = 31337
-    page_json = page(title='title', create_time=create_time, edit_time=edit_time)
+    page_json = page(title='title')
+    block_json = block('note', create_time=create_time, edit_time=edit_time)
     when(mock_time_formatter).called_with(create_time).then_return('[create time]')
     when(mock_time_formatter).called_with(edit_time).then_return('[edit time]')
 
-    formatted_source = source_formatter('[source]', page_json)
+    formatted_source = source_formatter(block_json, '[source]', page_json)
 
-    assert formatted_source == "[source]\nNote from Roam page 'title', created at [create time], edited at [edit time]."
+    assert formatted_source == "[source]<br/>Note from Roam page 'title', created at [create time], edited at [edit time]."
 
 
 def test_time_formatter():

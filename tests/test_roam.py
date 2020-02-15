@@ -103,28 +103,30 @@ def test_build_from_note(roam_note_builder, mock_source_builder):
     assert roam_note_builder(block_json, [page_json]) == RoamNote('{note}', 'source')
 
 
-def block(string: str, *children: JsonData) -> JsonData:
-    block_json = {'string': string}
-    if children:
-        block_json['children'] = list(children)
-    return block_json
-
-
-def page(
-    *blocks: JsonData,
-    title: str = 'title',
+def block(
+    string: str,
+    *children: JsonData,
     create_time: int = None,
     edit_time: int = None,
 ) -> JsonData:
+    block_json = {'string': string}
+
+    if children:
+        block_json['children'] = list(children)
+
+    if create_time is not None:
+        block_json['create-time'] = create_time
+
+    if edit_time is not None:
+        block_json['edit-time'] = edit_time
+
+    return block_json
+
+
+def page(*blocks: JsonData, title: str = 'title') -> JsonData:
     page_json = {'title': title}
 
     if blocks:
         page_json['children'] = list(blocks)
-
-    if create_time is not None:
-        page_json['create-time'] = create_time
-
-    if edit_time is not None:
-        page_json['edit-time'] = edit_time
 
     return page_json
