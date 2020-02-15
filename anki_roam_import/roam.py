@@ -40,7 +40,10 @@ class NoteExtractor:
             yield from self.extract_notes_from_children(page, [])
 
     def extract_notes_from_children(
-            self, page_or_block: JsonData, parents: List[JsonData]) -> Iterable[RoamNote]:
+        self,
+        page_or_block: JsonData,
+        parents: List[JsonData],
+    ) -> Iterable[RoamNote]:
 
         if 'children' not in page_or_block:
             return
@@ -102,9 +105,77 @@ class SourceBuilder:
         return self.source_formatter(source, page)
 
 
+@dataclass
 class SourceFinder:
+    source_extractor: 'SourceExtractor'
+
     def __call__(self, block: JsonData, parents: List[JsonData]) -> Optional[str]:
-        pass
+        source = self.find_source_in_children(block)
+
+        if source is None:
+            source = self.find_source_in_siblings_or_parents(block, parents)
+
+        return source
+
+    def find_source_in_children(self, block: JsonData) -> Optional[str]:
+        if 'children' not in block:
+            return None
+
+        for child in block['children']:
+            source = self.source_extractor(child)
+
+            if source is not None:
+                return source
+
+    def find_source_in_siblings_or_parents(
+        self, block: JsonData, parents: List[JsonData],
+    ) -> Optional[str]:
+        if not parents:
+            return None
+
+        source = self.find_source_in_siblings(block, parents[-1])
+
+        if source is None:
+            source = self.find_source_in_parents(parents)
+
+        return source
+
+    def find_source_in_siblings(
+        self, block: JsonData, parent: JsonData,
+    ) -> Optional[str]:
+        after_block = False
+        last_source_before_block = None
+
+        for child in parent['children']:
+            if child is block:
+                after_block = True
+                continue
+
+            source = self.source_extractor(child)
+
+            if source is None:
+                continue
+
+            if after_block:
+                return source
+
+            last_source_before_block = source
+
+        return last_source_before_block
+
+    def find_source_in_parents(self, parents: List[JsonData]) -> Optional[str]:
+        for parent in reversed(parents):
+            source = self.source_extractor(parent)
+
+            if source is not None:
+                return source
+
+        return None
+
+
+class SourceExtractor:
+    def __call__(self, block: JsonData) -> Optional[str]:
+        return None
 
 
 @dataclass
@@ -126,7 +197,7 @@ class SourceFormatter:
         formatted_source += '.'
 
         if source is not None:
-            formatted_source = f'Source: {source}\n' + formatted_source
+            formatted_source = f'{source}\n{formatted_source}'
 
         return formatted_source
 
@@ -136,11 +207,14 @@ class TimeFormatter:
     time_zone: Optional[dt.tzinfo]
 
     def __call__(self, timestamp_millis: int) -> str:
-        utc_datetime = dt.datetime.fromtimestamp(timestamp_millis / 1e3, dt.timezone.utc)
+        timestamp_seconds = timestamp_millis / 1e3
+        utc_datetime = dt.datetime.fromtimestamp(
+            timestamp_seconds, dt.timezone.utc)
         local_zone_datetime = utc_datetime.astimezone(self.time_zone)
         return local_zone_datetime.isoformat(timespec='milliseconds')
 
 
-extract_roam_notes = NoteExtractor(RoamNoteBuilder(
-    SourceBuilder(SourceFinder(), SourceFormatter(TimeFormatter(time_zone=None))),
-))
+extract_roam_notes = NoteExtractor(RoamNoteBuilder(SourceBuilder(
+    SourceFinder(SourceExtractor()),
+    SourceFormatter(TimeFormatter(time_zone=None)),
+)))
