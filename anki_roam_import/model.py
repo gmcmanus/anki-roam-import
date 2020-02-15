@@ -9,8 +9,11 @@ JsonData = Any
 
 @dataclass
 class RoamNote:
-    content: str
+    roam_content: str
     source: str
 
 
-AnkiNote = str
+@dataclass
+class AnkiNote:
+    anki_content: str
+    source: str

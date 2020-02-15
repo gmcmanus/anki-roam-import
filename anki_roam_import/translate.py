@@ -8,21 +8,25 @@ from .roam import CLOZE_PATTERN
 
 @dataclass
 class NoteTranslator:
-    note_cleaner: 'RoamNoteCleaner'
-    note_splitter: 'NoteSplitter'
+    roam_text_cleaner: 'RoamTextCleaner'
+    cloze_splitter: 'ClozeSplitter'
     cloze_enumerator: 'ClozeEnumerator'
-    note_joiner: 'NoteJoiner'
+    cloze_joiner: 'ClozeJoiner'
 
     def __call__(self, roam_note: RoamNote) -> AnkiNote:
-        clean_note = self.note_cleaner(roam_note)
-        note_parts = list(self.note_splitter(clean_note))
+        clean_content = self.roam_text_cleaner(roam_note.roam_content)
+        note_parts = list(self.cloze_splitter(clean_content))
         numbered_parts = self.cloze_enumerator(note_parts)
-        return self.note_joiner(numbered_parts)
+        anki_content = self.cloze_joiner(numbered_parts)
+
+        clean_source = self.roam_text_cleaner(roam_note.source)
+
+        return AnkiNote(anki_content=anki_content, source=clean_source)
 
 
-class RoamNoteCleaner:
-    def __call__(self, roam_note: RoamNote) -> RoamNote:
-        return re.sub(r'\[\[|\]\]', '', roam_note)
+class RoamTextCleaner:
+    def __call__(self, roam_text: str) -> str:
+        return re.sub(r'\[\[|\]\]', '', roam_text)
 
 
 @dataclass
@@ -35,8 +39,8 @@ class Cloze:
 NotePart = Union[Cloze, str]
 
 
-class NoteSplitter:
-    def __call__(self, note: RoamNote) -> Iterable[NotePart]:
+class ClozeSplitter:
+    def __call__(self, note: str) -> Iterable[NotePart]:
         index = 0
 
         for match in CLOZE_PATTERN.finditer(note):
@@ -76,10 +80,10 @@ def has_valid_number(cloze: Cloze) -> bool:
 
 
 @dataclass
-class NoteJoiner:
+class ClozeJoiner:
     anki_cloze_formatter: 'AnkiClozeFormatter'
 
-    def __call__(self, parts: Iterable[NotePart]) -> AnkiNote:
+    def __call__(self, parts: Iterable[NotePart]) -> str:
         def formatted_parts():
             for part in parts:
                 if isinstance(part, Cloze):
@@ -91,7 +95,7 @@ class NoteJoiner:
 
 
 class AnkiClozeFormatter:
-    def __call__(self, numbered_cloze: Cloze) -> AnkiNote:
+    def __call__(self, numbered_cloze: Cloze) -> str:
         if not has_valid_number(numbered_cloze):
             raise ValueError
 
@@ -104,8 +108,8 @@ class AnkiClozeFormatter:
 
 
 translate_note = NoteTranslator(
-    RoamNoteCleaner(),
-    NoteSplitter(),
+    RoamTextCleaner(),
+    ClozeSplitter(),
     ClozeEnumerator(),
-    NoteJoiner(AnkiClozeFormatter()),
+    ClozeJoiner(AnkiClozeFormatter()),
 )

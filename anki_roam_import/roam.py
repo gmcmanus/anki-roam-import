@@ -8,10 +8,9 @@ from zipfile import ZipFile, is_zipfile
 from .model import JsonData, RoamNote
 
 
-def extract_notes_from_path(path: str) -> Iterable[RoamNote]:
+def load_roam_pages(path: str) -> Iterable[JsonData]:
     for file in generate_json_files(path):
-        json_data = json.load(file)
-        yield from extract_notes(json_data)
+        yield from json.load(file)
 
 
 def generate_json_files(path: str) -> Iterable[TextIO]:
@@ -36,8 +35,8 @@ def is_json_path(path: str) -> bool:
 class NoteExtractor:
     roam_note_builder: 'RoamNoteBuilder'
 
-    def __call__(self, roam_json: JsonData) -> Iterable[RoamNote]:
-        for page in roam_json:
+    def __call__(self, roam_pages: Iterable[JsonData]) -> Iterable[RoamNote]:
+        for page in roam_pages:
             yield from self.extract_notes_from_children(page, [])
 
     def extract_notes_from_children(
@@ -76,6 +75,7 @@ def contains_cloze(string: str) -> bool:
     return bool(CLOZE_PATTERN.search(string))
 
 
+# TODO this captures KaTeX formulas too... e.g. $$\frac{a}{b}$$
 # noinspection RegExpRedundantEscape
 CLOZE_PATTERN = re.compile(
     r'''
@@ -141,6 +141,6 @@ class TimeFormatter:
         return local_zone_datetime.isoformat(timespec='milliseconds')
 
 
-extract_notes = NoteExtractor(RoamNoteBuilder(
+extract_roam_notes = NoteExtractor(RoamNoteBuilder(
     SourceBuilder(SourceFinder(), SourceFormatter(TimeFormatter(time_zone=None))),
 ))

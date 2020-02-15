@@ -1,3 +1,3 @@
-from .anki_roam_import.anki import plugin_main
+from anki_roam_import import plugin
 
-plugin_main()
+plugin.main()
