@@ -40,11 +40,11 @@ class CalledWith:
     def then_return(self, value):
         original_side_effect = self.mock.side_effect
 
-        if original_side_effect is None:
+        if callable(original_side_effect):
+            fall_back = original_side_effect
+        elif original_side_effect is None:
             def fall_back(*args, **kwargs):
                 return DEFAULT
-        elif callable(original_side_effect):
-            fall_back = original_side_effect
         else:
             raise ValueError
 
