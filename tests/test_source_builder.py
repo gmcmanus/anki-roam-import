@@ -113,6 +113,35 @@ def source_extractor() -> SourceExtractor:
     return SourceExtractor()
 
 
+def test_source_extractor_without_string(source_extractor):
+    assert source_extractor({}) is None
+
+
+def test_source_extractor_with_upper_case_source(source_extractor):
+    block_json = block('Source:: reference')
+    assert source_extractor(block_json) == 'reference'
+
+
+def test_source_extractor_with_lower_case_source(source_extractor):
+    block_json = block('source:: reference')
+    assert source_extractor(block_json) == 'reference'
+
+
+def test_source_extractor_with_one_colon(source_extractor):
+    block_json = block('Source: reference')
+    assert source_extractor(block_json) == 'reference'
+
+
+def test_source_extractor_with_extra_whitespace(source_extractor):
+    block_json = block('  Source  :  :  reference  ')
+    assert source_extractor(block_json) == 'reference'
+
+
+def test_source_extractor_with_extra_text(source_extractor):
+    block_json = block('text source: reference ')
+    assert source_extractor(block_json) is None
+
+
 @pytest.fixture
 def source_formatter(mock_time_formatter) -> SourceFormatter:
     return SourceFormatter(mock_time_formatter)

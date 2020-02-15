@@ -17,7 +17,6 @@ def test_extract_then_translate_no_source():
     )]
 
 
-@pytest.mark.xfail(reason='feature being implemented')
 def test_extract_then_translate_with_source():
     source_json = block('source:: reference')
     block_json = block('{cloze} text')

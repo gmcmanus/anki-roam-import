@@ -26,7 +26,10 @@ class NoteTranslator:
 
 class RoamTextCleaner:
     def __call__(self, roam_text: str) -> str:
-        return re.sub(r'\[\[|\]\]', '', roam_text)
+        return ROAM_TEXT_CLEAN_PATTERN.sub('', roam_text)
+
+
+ROAM_TEXT_CLEAN_PATTERN = re.compile(r'\[\[|\]\]')
 
 
 @dataclass

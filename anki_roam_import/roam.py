@@ -82,13 +82,13 @@ def contains_cloze(string: str) -> bool:
 # noinspection RegExpRedundantEscape
 CLOZE_PATTERN = re.compile(
     r'''
-        (?<!\{)                 # don't match double bracket behind
-        \{                      # opening bracket
-        (?!\{)                  # don't match double bracket ahead
-        (?:c(?P<number>\d+)\|)? # optional cloze number
-        (?P<content>.+?)        # content
-        (?:\|(?P<hint>.+?))?    # optional hint
-        \}                      # closing bracket
+        (?<! \{ )                      # don't match double bracket behind
+        \{                             # opening bracket
+        (?! \{ )                       # don't match double bracket ahead
+        (?: c (?P<number> \d+ ) \| )?  # optional cloze number
+        (?P<content> .+? )             # content
+        (?: \| (?P<hint> .+? ) )?      # optional hint
+        \}                             # closing bracket
     ''',
     flags=re.VERBOSE | re.DOTALL,
 )
@@ -175,7 +175,31 @@ class SourceFinder:
 
 class SourceExtractor:
     def __call__(self, block: JsonData) -> Optional[str]:
+        if 'string' not in block:
+            return None
+
+        string = block['string']
+        match = SOURCE_PATTERN.search(string)
+
+        if match:
+            return match['source']
+
         return None
+
+
+SOURCE_PATTERN = re.compile(
+    r'''
+        ^                  # start of string
+        \s*                # leading whitespace
+        source          
+        (?: \s* : )+       # colons with intervening whitespace
+        \s*                # leading whitespace
+        (?P<source> .*? )  # source text
+        \s*                # trailing whitespace
+        $                  # end of string
+    ''',
+    flags=re.IGNORECASE | re.DOTALL | re.VERBOSE,
+)
 
 
 @dataclass
