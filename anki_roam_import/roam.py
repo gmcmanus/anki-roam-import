@@ -191,7 +191,7 @@ SOURCE_PATTERN = re.compile(
     r'''
         ^                  # start of string
         \s*                # leading whitespace
-        source          
+        source
         (?: \s* : )+       # colons with intervening whitespace
         \s*                # leading whitespace
         (?P<source> .*? )  # source text
