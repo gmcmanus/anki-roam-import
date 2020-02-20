@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import List, Iterable
 
 from anki.notes import Note
@@ -81,6 +82,15 @@ class NormalizedNotes:
 
     def update(self, contents):
         self.normalized_contents.update(map(normalized_content, contents))
+
+
+def normalized_content(content: str) -> str:
+    content_without_html = stripHTMLMedia(content)
+    stripped_content = CHARACTERS_TO_STRIP.sub('', content_without_html)
+    return ' '.join(stripped_content.split())
+
+
+CHARACTERS_TO_STRIP = re.compile(r'[!"\'\(\),\-\.:;\?\[\]_`\{\}]')
 
 
 class AddedNotesFile:
@@ -165,7 +175,3 @@ class AnkiNoteAdder:
 
     def write(self, added_notes_file: AddedNotesFile):
         added_notes_file.write(self.added_contents)
-
-
-def normalized_content(content: str) -> str:
-    return stripHTMLMedia(content).strip()
