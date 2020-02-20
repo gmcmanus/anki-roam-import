@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List
+from typing import List, Iterable
 
 from anki.notes import Note
 from anki.utils import splitFields, stripHTMLMedia
@@ -37,10 +37,14 @@ def import_roam_notes_into_anki():
     num_notes_added = 0
     num_notes_ignored = 0
 
-    added_notes = AddedNotes(added_notes_path())
+    added_notes_file = AddedNotesFile(added_notes_path())
+    added_notes = added_notes_file.read()
+
+    normalized_notes = NormalizedNotes()
+    normalized_notes.update(added_notes_file.read())
 
     config = mw.addonManager.getConfig(__name__)
-    note_adder = AnkiNoteAdder(mw.col, config, added_notes.read())
+    note_adder = AnkiNoteAdder(mw.col, config, added_notes, normalized_notes)
 
     for note in notes_to_add:
         card_ids = note_adder.try_add(note)
@@ -49,7 +53,7 @@ def import_roam_notes_into_anki():
         else:
             num_notes_ignored += 1
 
-    added_notes.write(list(note_adder.added_normalized_contents))
+    note_adder.write(added_notes_file)
 
     def info():
         if not num_notes_added and not num_notes_ignored:
@@ -65,7 +69,21 @@ def import_roam_notes_into_anki():
     showInfo(', '.join(info()) + '.')
 
 
-class AddedNotes:
+class NormalizedNotes:
+    def __init__(self):
+        self.normalized_contents = set()
+
+    def __contains__(self, content):
+        return normalized_content(content) in self.normalized_contents
+
+    def add(self, content):
+        self.normalized_contents.add(normalized_content(content))
+
+    def update(self, contents):
+        self.normalized_contents.update(map(normalized_content, contents))
+
+
+class AddedNotesFile:
     def __init__(self, path):
         self.path = path
 
@@ -89,19 +107,25 @@ def added_notes_path():
 
 
 class AnkiNoteAdder:
-    def __init__(self, collection, config, added_contents):
+    def __init__(
+        self,
+        collection,
+        config,
+        added_notes: Iterable[str],
+        normalized_notes: NormalizedNotes,
+    ):
         self.collection = collection
         self.model = self.collection.models.byName(config['model_name'])
         self._find_field_indexes(config)
 
-        self.added_normalized_contents = set(map(normalized_content, added_contents))
+        self.added_contents = list(added_notes)
+        self.normalized_notes = normalized_notes
 
         note_fields = self.collection.db.list(
             'select flds from notes where mid = ?', self.model['id'])
-        self.present_normalized_contents = {
-            normalized_content(splitFields(fields)[self.content_field_index])
-            for fields in note_fields
-        }
+        for fields in note_fields:
+            content = splitFields(fields)[self.content_field_index]
+            self.normalized_notes.add(content)
 
     def _find_field_indexes(self, config):
         self.content_field_index = None
@@ -117,9 +141,9 @@ class AnkiNoteAdder:
             raise ValueError('Could not find content and/or source fields in model.')
 
     def try_add(self, anki_note: AnkiNote) -> List:
-        normalized_note_content = normalized_content(anki_note.anki_content)
-        if (normalized_note_content in self.added_normalized_contents or
-                normalized_note_content in self.present_normalized_contents):
+        content = anki_note.anki_content
+
+        if content in self.normalized_notes:
             return []
 
         note = self._note(anki_note)
@@ -128,7 +152,8 @@ class AnkiNoteAdder:
 
         card_ids = [card.id for card in note.cards()]
 
-        self.added_normalized_contents.add(normalized_note_content)
+        self.normalized_notes.add(content)
+        self.added_contents.append(content)
 
         return card_ids
 
@@ -137,6 +162,9 @@ class AnkiNoteAdder:
         note.fields[self.content_field_index] = anki_note.anki_content
         note.fields[self.source_field_index] = anki_note.source
         return note
+
+    def write(self, added_notes_file: AddedNotesFile):
+        added_notes_file.write(self.added_contents)
 
 
 def normalized_content(content: str) -> str:
