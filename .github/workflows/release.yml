@@ -1,4 +1,4 @@
-name: Run tests then build and release the Anki addon
+name: Release
 
 on: push
 
