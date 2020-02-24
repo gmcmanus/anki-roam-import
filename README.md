@@ -7,6 +7,12 @@ your Roam database to JSON, and then import it into Anki. The addon will create
 a cloze note for each Roam block (bullet point) that is marked up with curly
 brackets.
 
+## Why?
+
+Roam provides a low-friction way to record, refine, and link your ideas.
+Some of the notes you make in Roam are worth remembering using Anki,
+and it is nicer to edit them in context in Roam rather than writing them one at a time in Anki.
+
 ## Installation
 
 Download the latest `anki_roam_import.ankiaddon` file from the
@@ -75,7 +81,7 @@ You can then check which notes were created by looking in the card browser.
 
 ## Indicating the source of the note
 
-If you put a Roam block (bullet) that begins with 'Source:' (case insensitive)
+If you put a Roam block (bullet point) that begins with 'Source:' (case insensitive)
 near the block of the Roam cloze note, then it will be recorded as the source of
 the note. The add-on looks for sources in these locations:
 * Immediate children of the note block.
