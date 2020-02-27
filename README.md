@@ -15,6 +15,9 @@ and it is nicer to edit them in context in Roam rather than writing them one at 
 
 ## Installation
 
+Ensure you have a recent version of [Anki](https://apps.ankiweb.net/)
+installed (2.1.16 or newer).
+
 Download the latest `anki_roam_import.ankiaddon` file from the
 [Github release page](https://github.com/gmcmanus/anki-roam-import/releases),
 then open it and Anki will install the add-on.
