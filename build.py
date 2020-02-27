@@ -10,7 +10,11 @@ def main():
 
 
 def add_to_zip(zip_file: ZipFile, path: str) -> None:
+    if '__pycache__' in path:
+        return
+
     zip_file.write(path)
+
     if os.path.isdir(path):
         for child_path in os.listdir(path):
             add_to_zip(zip_file, os.path.join(path, child_path))
