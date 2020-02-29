@@ -1,5 +1,5 @@
 from inspect import signature
-from typing import TypeVar
+from typing import TypeVar, Type
 from unittest.mock import create_autospec, DEFAULT
 
 
@@ -9,8 +9,8 @@ __all__ = ['mock', 'when']
 T = TypeVar('T')
 
 
-def mock(spec: T, *, instance: bool = True, **kwargs) -> T:
-    return create_autospec(spec, spec_set=True, instance=instance, **kwargs)
+def mock(spec: Type[T], **kwargs) -> T:
+    return create_autospec(spec, spec_set=True, instance=True, **kwargs)
 
 
 # noinspection PyPep8Naming
