@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 try:
     from anki.notes import Note
@@ -23,7 +23,7 @@ class AnkiModelNotes:
     collection: Any  # anki.collection._Collection
     model: Any  # anki.models.NoteType
     content_field_index: int
-    source_field_index: int
+    source_field_index: Optional[int]
 
     def add_note(self, anki_note: AnkiNote) -> None:
         note = self._note(anki_note)
@@ -32,7 +32,8 @@ class AnkiModelNotes:
     def _note(self, anki_note: AnkiNote) -> 'Note':
         note = Note(self.collection, self.model)
         note.fields[self.content_field_index] = anki_note.content
-        note.fields[self.source_field_index] = anki_note.source
+        if self.source_field_index is not None:
+            note.fields[self.source_field_index] = anki_note.source
         return note
 
     def get_notes(self) -> Iterable[str]:
@@ -62,13 +63,17 @@ class AnkiCollection:
     collection: Any  # anki.collection._Collection
 
     def get_model_notes(
-        self, model_name: str, content_field: str, source_field: str
+        self, model_name: str, content_field: str, source_field: Optional[str],
     ) -> AnkiModelNotes:
         model = self.collection.models.byName(model_name)
 
         field_names = self.collection.models.fieldNames(model)
         content_field_index = field_names.index(content_field)
-        source_field_index = field_names.index(source_field)
+
+        if source_field is not None:
+            source_field_index = field_names.index(source_field)
+        else:
+            source_field_index = None
 
         return AnkiModelNotes(
             self.collection, model, content_field_index, source_field_index)

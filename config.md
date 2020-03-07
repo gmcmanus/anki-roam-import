@@ -5,4 +5,4 @@
 note. Defaults to "Text".
 
 `source_field` is the name of the field in which to put the source of the note.
-Defaults to "Extra".
+Defaults to null, which means the source is not recorded.

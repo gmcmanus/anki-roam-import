@@ -1,5 +1,5 @@
 {
     "model_name": "Cloze",
     "content_field": "Text",
-    "source_field": "Extra"
+    "source_field": null
 }
