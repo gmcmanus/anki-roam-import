@@ -72,11 +72,12 @@ The Roam cloze deletion syntax has some differences from the Anki syntax:
 
 To export from Roam:
 
-1. Click on the ellipsis button (...) in the top right menu, then choose either
-   "Export All" (to export all Roam pages) or "Export" (to export just the
-   current page).
-2. Choose JSON as the export format and click Export. You will download a ZIP
-   file.
+1. Click on the ellipsis button (...) in the top right menu, then choose
+   "Export All". (You can also choose "Export" to export just the current page,
+   but it's easier to export all each time. Don't worry, the add-on won't import
+   [duplicate notes](#duplicate-notes).)
+2. Choose JSON as the export format and click the Export All button.
+   You will download a ZIP file.
    
 To import into Anki:
 
@@ -87,18 +88,16 @@ To import into Anki:
 
 You can then check which notes were created by looking in the card browser.
 
-## Indicating the source of the note
+### Duplicate notes
 
-If you put a Roam block (bullet point) that begins with 'Source:' (case insensitive)
-near the block of the Roam cloze note, then it will be recorded as the source of
-the note. The add-on looks for sources in these locations:
-* Immediate children of the note block.
-* Siblings of the note block, with preference to the first sibling after the
-  note block, then nearest sibling before the note block.
-* Parent block, its parents, and so on.
+Notes that already exist in the deck will not be imported.
 
-By default the source is put into the "Extra" field of the Anki cloze note. The
-field used can be configured (see below).
+In addition, the add-on records every note it imports to a file,
+and it won't import the same note twice.
+This means that after you import a note into Anki,
+you can change that Anki note as you like (e.g. edit it or delete it),
+and it the old note won't be imported again.
+
 
 ## Configuration
 
@@ -111,13 +110,25 @@ fields are:
 * `content_field` is the name of the field in which to put the content of the
   note. Defaults to "Text".
 * `source_field` is the name of the field in which to put the source of the note.
-  Defaults to "Extra".
+  Defaults to null, which means the source is not recorded.
+
+## Indicating the source of the note
+
+If you configure the source_field
+then the add-on will record the source of each note in that field.
+
+If you put a Roam block (bullet point) that begins with 'Source:' (case insensitive)
+near the block of the Roam cloze note, then it will be recorded as the source of
+the note. The add-on looks for sources in these locations:
+* Immediate children of the note block.
+* Siblings of the note block, with preference to the first sibling after the
+  note block, then nearest sibling before the note block.
+* Parent block, its parents, and so on.
+
 
 ## Areas for improvement
 
 * Currently only a single Roam block is used to create a single Anki note.
-* Currently it detects LaTeX (KaTeX) formulas as cloze notes because of the
-  curly brackets.
 * Better detection of the source of a note - perhaps looking at siblings of
   parents?
 * Better conversion of Roam Markdown into Anki HTML e.g. line breaks, links
