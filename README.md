@@ -15,12 +15,17 @@ and it is nicer to edit them in context in Roam rather than writing them one at 
 
 ## Installation
 
-Ensure you have a recent version of [Anki](https://apps.ankiweb.net/)
-installed (2.1.16 or newer).
+Ensure you have a recent version of [Anki](https://apps.ankiweb.net/) installed
+(2.1.16 or newer).
 
-Download the latest `anki_roam_import.ankiaddon` file from the
-[Github release page](https://github.com/gmcmanus/anki-roam-import/releases),
-then open it and Anki will install the add-on.
+1. Copy this code to your clipboard:
+   ```
+   1172449017
+   ```
+2. Open the Anki desktop application.
+3. In the Anki main window menu, choose "Tools" then "Add-ons".
+4. Click the "Get Add-ons..." button.
+5. Paste the code you copied above into the text box, then click the OK button.
 
 ## Creating cloze notes in Roam
 
