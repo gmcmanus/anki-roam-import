@@ -5,12 +5,12 @@ from unittest.mock import call
 
 import pytest
 
-from anki_roam_import.anki import AnkiAddonData, AnkiModelNotes, AnkiCollection
+from anki_roam_import.anki import AnkiAddonData, AnkiCollection, AnkiModelNotes
 from anki_roam_import.importer import AnkiNoteImporter
-from anki_roam_import.model import JsonData, AnkiNote
+from anki_roam_import.model import AnkiNote, JsonData
 
-from tests.test_roam import page, block
-from tests.util import when, mock
+from tests.test_roam import block, page
+from tests.util import mock, when
 
 
 @dataclass
@@ -19,6 +19,12 @@ class JsonFile:
 
     def write_json(self, json_data: JsonData) -> None:
         json.dump(json_data, self.path.open('w', encoding='utf-8'))
+
+    def write_page(self, *blocks: JsonData, title: str) -> None:
+        self.write_json([page(*blocks, title=title)])
+
+    def write_block(self, content: str) -> None:
+        self.write_json([page(block(content))])
 
 
 @pytest.fixture
@@ -61,22 +67,70 @@ def anki_model_notes() -> AnkiModelNotes:
     return mock(AnkiModelNotes)
 
 
+@pytest.fixture
+def anki_note_importer(addon_data, anki_collection):
+    return AnkiNoteImporter(addon_data, anki_collection)
+
+
 def test_import_cloze_note_with_source(
-        roam_json_file, addon_data, anki_collection, anki_model_notes):
-    roam_json_file.write_json([page(
+    roam_json_file, addon_data, anki_collection, anki_model_notes,
+):
+    roam_json_file.write_page(
         block('source:: reference'),
         block('{cloze} text'),
         title='title',
-    )])
+    )
 
     importer = AnkiNoteImporter(addon_data, anki_collection)
     info = importer.import_from_path(str(roam_json_file.path))
 
     anki_model_notes.add_note.assert_has_calls([
         call(AnkiNote(
-            anki_content='{{c1::cloze}} text',
+            content='{{c1::cloze}} text',
             source="reference<br/>Note from Roam page 'title'.",
         )),
     ])
-
     assert info == '1 new notes imported.'
+
+
+def test_translate_latex_math(
+    roam_json_file, anki_note_importer, anki_model_notes,
+):
+    roam_json_file.write_block(r'$$\textrm{outside cloze}$$ and {inside $$\textrm{cloze}$$}')
+
+    info = anki_note_importer.import_from_path(str(roam_json_file.path))
+
+    anki_model_notes.add_note.assert_has_calls([
+        call(AnkiNote(
+            content=r'\(\textrm{outside cloze}\) and {{c1::inside \(\textrm{cloze}\)}}',
+            source="Note from Roam page 'title'.",
+        )),
+    ])
+    assert info == '1 new notes imported.'
+
+
+def test_translate_code(
+    roam_json_file, anki_note_importer, anki_model_notes,
+):
+    roam_json_file.write_block('`code` and {`code` in cloze}')
+
+    info = anki_note_importer.import_from_path(str(roam_json_file.path))
+
+    anki_model_notes.add_note.assert_has_calls([
+        call(AnkiNote(
+            content='<code>code</code> and {{c1::<code>code</code> in cloze}}',
+            source="Note from Roam page 'title'.",
+        )),
+    ])
+    assert info == '1 new notes imported.'
+
+
+def test_do_note_add_note_with_brackets_inside_code(
+    roam_json_file, anki_note_importer, anki_model_notes,
+):
+    roam_json_file.write_block('```{not cloze}```')
+
+    info = anki_note_importer.import_from_path(str(roam_json_file.path))
+
+    anki_model_notes.add_note.assert_not_called()
+    assert info == 'No notes found.'

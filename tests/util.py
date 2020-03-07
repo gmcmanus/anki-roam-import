@@ -1,6 +1,6 @@
 from inspect import signature
-from typing import TypeVar, Type
-from unittest.mock import create_autospec, DEFAULT
+from typing import Type, TypeVar
+from unittest.mock import DEFAULT, create_autospec
 
 
 __all__ = ['mock', 'when']
@@ -34,6 +34,16 @@ class CalledWith:
         return dict(bound_arguments.arguments)
 
     def then_return(self, value):
+        def side_effect():
+            return value
+        self._add_new_side_effect(side_effect)
+
+    def then_raise(self, exception):
+        def side_effect():
+            raise exception
+        self._add_new_side_effect(side_effect)
+
+    def _add_new_side_effect(self, new_side_effect):
         original_side_effect = self.mock_object.side_effect
 
         if callable(original_side_effect):
@@ -46,7 +56,7 @@ class CalledWith:
 
         def side_effect(*args, **kwargs):
             if self._normalized_arguments(*args, **kwargs) == self.arguments:
-                return value
+                return new_side_effect()
             return fall_back(*args, **kwargs)
 
         self.mock_object.side_effect = side_effect

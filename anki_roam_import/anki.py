@@ -31,7 +31,7 @@ class AnkiModelNotes:
 
     def _note(self, anki_note: AnkiNote) -> 'Note':
         note = Note(self.collection, self.model)
-        note.fields[self.content_field_index] = anki_note.anki_content
+        note.fields[self.content_field_index] = anki_note.content
         note.fields[self.source_field_index] = anki_note.source
         return note
 

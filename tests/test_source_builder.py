@@ -2,10 +2,13 @@ import datetime as dt
 
 import pytest
 
-from anki_roam_import.roam import SourceBuilder, SourceFinder, SourceFormatter, TimeFormatter, SourceExtractor
+from anki_roam_import.roam import (
+    SourceBuilder, SourceExtractor, SourceFinder,
+    SourceFormatter, TimeFormatter,
+)
 
-from tests.test_roam import page, block
-from tests.util import when, mock
+from tests.test_roam import block, page
+from tests.util import mock, when
 
 
 @pytest.fixture
@@ -23,7 +26,9 @@ def mock_source_formatter() -> SourceFormatter:
     return mock(SourceFormatter)
 
 
-def test_source_builder(source_builder, mock_source_finder, mock_source_formatter):
+def test_source_builder(
+    source_builder, mock_source_finder, mock_source_formatter
+):
     child_block_json = block('child')
     parent_block_json = block('parent', child_block_json)
     page_json = page(parent_block_json)
@@ -36,7 +41,10 @@ def test_source_builder(source_builder, mock_source_finder, mock_source_formatte
      .called_with(child_block_json, 'found source', page_json)
      .then_return('formatted source'))
 
-    assert source_builder(child_block_json, [page_json, parent_block_json]) == 'formatted source'
+    formatted_source = source_builder(
+        child_block_json, [page_json, parent_block_json])
+
+    assert formatted_source == 'formatted source'
 
 
 @pytest.fixture
@@ -57,7 +65,9 @@ def test_find_source_ignores_grandchildren(source_finder):
     assert source_finder(self, []) is None
 
 
-def test_find_source_prefers_first_child_with_source_to_parent_or_sibling(source_finder):
+def test_find_source_prefers_first_child_with_source_to_parent_or_sibling(
+    source_finder,
+):
     self = block(
         'self',
         block('first child'),
@@ -87,7 +97,9 @@ def test_find_source_prefers_first_later_sibling_with_source(source_finder):
     assert source_finder(self, [parent]) == 'first later sibling with source'
 
 
-def test_find_source_prefers_sibling_last_earlier_sibling_with_source_to_parent(source_finder):
+def test_find_source_prefers_sibling_last_earlier_sibling_with_source_to_parent(
+    source_finder,
+):
     self = block('self')
     parent = block(
         'parent with source',
@@ -105,7 +117,9 @@ def test_find_source_prefers_nearer_parent_with_source(source_finder):
     grandparent = block('grandparent with source', parent)
     great_grandparent = block('great grandparent with source', grandparent)
 
-    assert source_finder(self, [great_grandparent, grandparent, parent]) == 'grandparent with source'
+    source = source_finder(self, [great_grandparent, grandparent, parent])
+
+    assert source == 'grandparent with source'
 
 
 @pytest.fixture
@@ -157,8 +171,12 @@ def test_format_source(source_formatter, mock_time_formatter):
     edit_time = 31337
     page_json = page(title='title')
     block_json = block('note', create_time=create_time, edit_time=edit_time)
-    when(mock_time_formatter).called_with(create_time).then_return('[create time]')
-    when(mock_time_formatter).called_with(edit_time).then_return('[edit time]')
+    (when(mock_time_formatter)
+     .called_with(create_time)
+     .then_return('[create time]'))
+    (when(mock_time_formatter)
+     .called_with(edit_time)
+     .then_return('[edit time]'))
 
     formatted_source = source_formatter(block_json, '[source]', page_json)
 

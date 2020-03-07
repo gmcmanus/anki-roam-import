@@ -13,8 +13,8 @@ except ModuleNotFoundError:
 
 from .anki import AnkiAddonData, AnkiCollection, AnkiModelNotes
 from .model import AnkiNote
-from .roam import load_roam_pages, extract_roam_notes
-from .translate import translate_note
+from .roam import load_roam_pages, extract_roam_blocks
+from .anki_format import make_anki_note
 
 
 @dataclass
@@ -24,8 +24,8 @@ class AnkiNoteImporter:
 
     def import_from_path(self, path: str) -> str:
         roam_pages = load_roam_pages(path)
-        roam_notes = extract_roam_notes(roam_pages)
-        notes_to_add = map(translate_note, roam_notes)
+        roam_notes = extract_roam_blocks(roam_pages)
+        notes_to_add = map(make_anki_note, roam_notes)
 
         num_notes_added = 0
         num_notes_ignored = 0
@@ -125,12 +125,12 @@ class AnkiNoteAdder:
             self.normalized_notes.add(note)
 
     def try_add(self, anki_note: AnkiNote) -> bool:
-        if anki_note.anki_content in self.normalized_notes:
+        if anki_note.content in self.normalized_notes:
             return False
 
         self.model_notes.add_note(anki_note)
-        self.normalized_notes.add(anki_note.anki_content)
-        self.added_contents.append(anki_note.anki_content)
+        self.normalized_notes.add(anki_note.content)
+        self.added_contents.append(anki_note.content)
 
         return True
 
