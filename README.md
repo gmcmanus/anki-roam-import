@@ -131,4 +131,4 @@ the note. The add-on looks for sources in these locations:
 * Currently only a single Roam block is used to create a single Anki note.
 * Better detection of the source of a note - perhaps looking at siblings of
   parents?
-* Better conversion of Roam Markdown into Anki HTML e.g. line breaks, links
+* Better conversion of Roam Markdown into Anki HTML e.g. links
