@@ -158,7 +158,7 @@ def test_format_text_as_html_converts_consecutive_spaces_to_nbsp():
 
 
 def test_format_text_as_html_converts_newline_to_br():
-    assert format_text_as_html('a\nb') == 'a<br/>b'
+    assert format_text_as_html('a\nb') == 'a<br>b'
 
 
 @pytest.fixture

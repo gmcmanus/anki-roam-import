@@ -85,7 +85,7 @@ def test_import_cloze_note_with_source(
     anki_model_notes.add_note.assert_has_calls([
         call(AnkiNote(
             content='{{c1::cloze}} text',
-            source="reference<br/>Note from Roam page &#x27;title&#x27;.",
+            source="reference<br>Note from Roam page &#x27;title&#x27;.",
         )),
     ])
     assert info == '1 new notes imported.'
@@ -150,7 +150,7 @@ def test_format_as_html(
     anki_model_notes.add_note.assert_has_calls([
         call(AnkiNote(
             content='{{c1::&lt;cloze&gt; }} &amp;&nbsp;&nbsp;text ',
-            source="source&nbsp;&nbsp;&amp;<br/>Note from Roam page &#x27; &amp;&nbsp;&nbsp;title &#x27;.",
+            source="source&nbsp;&nbsp;&amp;<br>Note from Roam page &#x27; &amp;&nbsp;&nbsp;title &#x27;.",
         )),
     ])
     assert info == '1 new notes imported.'
