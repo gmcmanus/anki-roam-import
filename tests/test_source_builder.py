@@ -180,7 +180,7 @@ def test_format_source(source_formatter, mock_time_formatter):
 
     formatted_source = source_formatter(block_json, '[source]', page_json)
 
-    assert formatted_source == "[source]<br/>Note from Roam page 'title', created at [create time], edited at [edit time]."
+    assert formatted_source == "[source]\nNote from Roam page 'title', created at [create time], edited at [edit time]."
 
 
 def test_time_formatter():

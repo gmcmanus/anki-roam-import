@@ -1,6 +1,7 @@
 import html
+import re
 from dataclasses import dataclass, replace
-from typing import Any, Callable, Iterable, List, Optional, TypeVar
+from typing import Any, Callable, Iterable, List, Match, Optional, TypeVar
 
 from .model import (
     AnkiNote, Cloze, ClozePart, CodeBlock, CodeInline, Math, RoamBlock,
@@ -17,11 +18,13 @@ Formatter = Callable[[T], str]
 class AnkiNoteMaker:
     cloze_enumerator: 'ClozeEnumerator'
     roam_parts_formatter: Formatter[Iterable[RoamPart]]
+    html_formatter: Formatter[str]
 
     def __call__(self, roam_block: RoamBlock) -> AnkiNote:
         numbered_parts = self.cloze_enumerator(roam_block.parts)
         anki_content = self.roam_parts_formatter(numbered_parts)
-        return AnkiNote(anki_content, roam_block.source)
+        source_html = self.html_formatter(roam_block.source)
+        return AnkiNote(anki_content, source_html)
 
 
 class ClozeEnumerator:
@@ -68,7 +71,7 @@ def roam_parts_formatter(
 
 
 def cloze_formatter(
-    cloze_part_formatter: Formatter[ClozePart],
+    cloze_part_formatter: Formatter[ClozePart], html_formatter: Formatter[str],
 ) -> OptionalFormatter:
     def format_cloze(cloze: Any) -> Optional[str]:
         if not isinstance(cloze, Cloze):
@@ -78,7 +81,8 @@ def cloze_formatter(
             raise ValueError
 
         if cloze.hint is not None:
-            hint = f'::{cloze.hint}'
+            hint_html = html_formatter(cloze.hint)
+            hint = f'::{hint_html}'
         else:
             hint = ''
 
@@ -89,10 +93,27 @@ def cloze_formatter(
     return format_cloze
 
 
-def format_math(math: Any) -> Optional[str]:
-    if not isinstance(math, Math):
-        return None
-    return rf'\({math.content}\)'
+def format_text_as_html(text: str) -> str:
+    escaped_html = html.escape(text)
+    escaped_html = MULTIPLE_SPACES.sub(replace_spaces_with_nbsp, escaped_html)
+    return escaped_html.replace('\n', '<br>')
+
+
+MULTIPLE_SPACES = re.compile(' {2,}')
+
+
+def replace_spaces_with_nbsp(match: Match):
+    return '&nbsp;' * len(match.group())
+
+
+def math_formatter(html_formatter: Formatter[str]) -> OptionalFormatter:
+    def format_math(math: Any) -> Optional[str]:
+        if not isinstance(math, Math):
+            return None
+        math_html = html_formatter(math.content)
+        return rf'\({math_html}\)'
+
+    return format_math
 
 
 def code_block_formatter(code_formatter: Formatter[str]) -> OptionalFormatter:
@@ -119,25 +140,42 @@ def format_code(code: str) -> str:
     return f'<code>{escaped_code}</code>'
 
 
-def format_roam_curly_command(curly_command: Any) -> Optional[str]:
-    if not isinstance(curly_command, RoamCurlyCommand):
-        return None
-    return '{{' + curly_command.content + '}}'
+def roam_curly_command_formatter(
+    html_formatter: Formatter[str],
+) -> OptionalFormatter:
+    def format_roam_curly_command(curly_command: Any) -> Optional[str]:
+        if not isinstance(curly_command, RoamCurlyCommand):
+            return None
+        command_html = html_formatter(curly_command.content)
+        return '{{' + command_html + '}}'
+
+    return format_roam_curly_command
 
 
-def format_roam_colon_command(colon_command: Any) -> Optional[str]:
-    if not isinstance(colon_command, RoamColonCommand):
-        return None
-    return f':{colon_command.command}{colon_command.content}'
+def roam_colon_command_formatter(
+    html_formatter: Formatter[str],
+) -> OptionalFormatter:
+    def format_roam_colon_command(colon_command: Any) -> Optional[str]:
+        if not isinstance(colon_command, RoamColonCommand):
+            return None
+        command_html = html_formatter(colon_command.command)
+        content_html = html_formatter(colon_command.content)
+        return f':{command_html}{content_html}'
+
+    return format_roam_colon_command
 
 
-def format_string(string: Any) -> Optional[str]:
-    if not isinstance(string, str):
-        return None
-    return string
+def string_formatter(html_formatter: Formatter[str]) -> OptionalFormatter:
+    def format_string(string: Any) -> Optional[str]:
+        if not isinstance(string, str):
+            return None
+        return html_formatter(string)
+    return format_string
 
 
 def make_anki_note_maker():
+    format_string = string_formatter(format_text_as_html)
+    format_math = math_formatter(format_text_as_html)
     format_code_inline = code_inline_formatter(format_code)
     format_code_block = code_block_formatter(format_code)
 
@@ -150,16 +188,19 @@ def make_anki_note_maker():
 
     roam_part_formatter = combine_formatters(
         format_string,
-        cloze_formatter(cloze_part_formatter),
+        cloze_formatter(cloze_part_formatter, format_text_as_html),
         format_math,
         format_code_block,
         format_code_inline,
-        format_roam_curly_command,
-        format_roam_colon_command,
+        roam_curly_command_formatter(format_text_as_html),
+        roam_colon_command_formatter(format_text_as_html),
     )
 
     return AnkiNoteMaker(
-        ClozeEnumerator(), roam_parts_formatter(roam_part_formatter))
+        ClozeEnumerator(),
+        roam_parts_formatter(roam_part_formatter),
+        format_text_as_html,
+    )
 
 
 make_anki_note = make_anki_note_maker()

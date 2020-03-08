@@ -346,7 +346,7 @@ class SourceFormatter:
         formatted_source += '.'
 
         if source is not None:
-            formatted_source = f'{source}<br/>{formatted_source}'
+            formatted_source = f'{source}\n{formatted_source}'
 
         return formatted_source
 

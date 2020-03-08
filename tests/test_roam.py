@@ -138,7 +138,10 @@ def block(
     return block_json
 
 
-def page(*blocks: JsonData, title: str = 'title') -> JsonData:
+def page(*blocks: JsonData, title: str = None) -> JsonData:
+    if title is None:
+        title = 'title'
+
     page_json = {'title': title}
 
     if blocks:
