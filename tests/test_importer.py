@@ -73,11 +73,13 @@ def anki_note_importer(addon_data, anki_collection):
 def test_import_cloze_note_with_source(
     roam_json_file, addon_data, anki_collection, anki_model_notes,
 ):
-    roam_json_file.write_blocks(
-        'source:: reference',
-        '{cloze} text',
+    roam_json_file.write_json([page(
+        block(
+            '{cloze} text',
+            block('source:: reference'),
+        ),
         title='title',
-    )
+    )])
 
     importer = AnkiNoteImporter(addon_data, anki_collection)
     info = importer.import_from_path(str(roam_json_file.path))
@@ -139,11 +141,13 @@ def test_do_not_add_note_with_brackets_inside_code(
 def test_format_as_html(
         roam_json_file, anki_note_importer, anki_model_notes,
 ):
-    roam_json_file.write_blocks(
-        'source:: source  & ',
-        '{<cloze> } &  text ',
+    roam_json_file.write_json([page(
+        block(
+            '{<cloze> } &  text ',
+            block('source:: source  & '),
+        ),
         title=' &  title ',
-    )
+    )])
 
     info = anki_note_importer.import_from_path(str(roam_json_file.path))
 

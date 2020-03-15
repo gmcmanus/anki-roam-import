@@ -121,14 +121,10 @@ If you put a Roam block (bullet point) that begins with 'Source:' (case insensit
 near the block of the Roam cloze note, then it will be recorded as the source of
 the note. The add-on looks for sources in these locations:
 * Immediate children of the note block.
-* Siblings of the note block, with preference to the first sibling after the
-  note block, then nearest sibling before the note block.
-* Parent block, its parents, and so on.
+* Parent of the note block, its parents, and so on.
 
 
 ## Areas for improvement
 
 * Currently only a single Roam block is used to create a single Anki note.
-* Better detection of the source of a note - perhaps looking at siblings of
-  parents?
 * Better conversion of Roam Markdown into Anki HTML e.g. links

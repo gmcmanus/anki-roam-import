@@ -236,7 +236,7 @@ class SourceFinder:
         source = self.find_source_in_children(block)
 
         if source is None:
-            source = self.find_source_in_siblings_or_parents(block, parents)
+            source = self.find_source_in_parents(parents)
 
         return source
 
@@ -250,41 +250,7 @@ class SourceFinder:
             if source is not None:
                 return source
 
-    def find_source_in_siblings_or_parents(
-        self, block: JsonData, parents: List[JsonData],
-    ) -> Optional[str]:
-        if not parents:
-            return None
-
-        source = self.find_source_in_siblings(block, parents[-1])
-
-        if source is None:
-            source = self.find_source_in_parents(parents)
-
-        return source
-
-    def find_source_in_siblings(
-        self, block: JsonData, parent: JsonData,
-    ) -> Optional[str]:
-        after_block = False
-        last_source_before_block = None
-
-        for child in parent['children']:
-            if child is block:
-                after_block = True
-                continue
-
-            source = self.source_extractor(child)
-
-            if source is None:
-                continue
-
-            if after_block:
-                return source
-
-            last_source_before_block = source
-
-        return last_source_before_block
+        return None
 
     def find_source_in_parents(self, parents: List[JsonData]) -> Optional[str]:
         for parent in reversed(parents):

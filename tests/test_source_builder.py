@@ -65,7 +65,7 @@ def test_find_source_ignores_grandchildren(source_finder):
     assert source_finder(self, []) is None
 
 
-def test_find_source_prefers_first_child_with_source_to_parent_or_sibling(
+def test_find_source_prefers_first_child_with_source_to_parent(
     source_finder,
 ):
     self = block(
@@ -84,31 +84,16 @@ def test_find_source_prefers_first_child_with_source_to_parent_or_sibling(
     assert source_finder(self, [parent]) == 'first child with source'
 
 
-def test_find_source_prefers_first_later_sibling_with_source(source_finder):
+def test_find_source_ignores_siblings_with_source(source_finder):
     self = block('self')
     parent = block(
-        'parent with source',
+        'parent without source',
         block('earlier sibling with source'),
         self,
-        block('first later sibling with source'),
-        block('second later sibling with source'),
+        block('later sibling with source'),
     )
 
-    assert source_finder(self, [parent]) == 'first later sibling with source'
-
-
-def test_find_source_prefers_sibling_last_earlier_sibling_with_source_to_parent(
-    source_finder,
-):
-    self = block('self')
-    parent = block(
-        'parent with source',
-        block('first earlier sibling with source'),
-        block('last earlier sibling with source'),
-        self,
-    )
-
-    assert source_finder(self, [parent]) == 'last earlier sibling with source'
+    assert source_finder(self, [parent]) is None
 
 
 def test_find_source_prefers_nearer_parent_with_source(source_finder):
