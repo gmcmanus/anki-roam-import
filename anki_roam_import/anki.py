@@ -3,13 +3,25 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
-try:
+from .model import JsonData, AnkiNote
+
+
+def is_anki_package_installed() -> bool:
+    try:
+        import anki
+    except ModuleNotFoundError:
+        return False
+    else:
+        return True
+
+
+if is_anki_package_installed():
     from anki.collection import _Collection
+    from anki.models import NoteType
     from anki.notes import Note
-    from anki.types import NoteType
     from anki.utils import splitFields
     from aqt.main import AnkiQt
-except ModuleNotFoundError:
+else:
     # allow running tests without anki package installed
     from typing import Any, Dict
 
@@ -24,8 +36,6 @@ except ModuleNotFoundError:
     # noinspection PyPep8Naming
     def splitFields(fields):
         return []
-
-from .model import JsonData, AnkiNote
 
 
 @dataclass

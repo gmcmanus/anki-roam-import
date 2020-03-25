@@ -4,17 +4,19 @@ import re
 from dataclasses import dataclass
 from typing import Iterable, List
 
-try:
+from .anki import (
+    AnkiAddonData, AnkiCollection, AnkiModelNotes, is_anki_package_installed,
+)
+from .anki_format import make_anki_note
+from .model import AnkiNote
+from .roam import extract_roam_blocks, load_roam_pages
+
+if is_anki_package_installed():
     from anki.utils import stripHTMLMedia
-except ModuleNotFoundError:
+else:
     # allow running tests without anki package installed
     # noinspection PyPep8Naming
     def stripHTMLMedia(content): return content
-
-from .anki import AnkiAddonData, AnkiCollection, AnkiModelNotes
-from .model import AnkiNote
-from .roam import load_roam_pages, extract_roam_blocks
-from .anki_format import make_anki_note
 
 
 @dataclass
