@@ -1,12 +1,21 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Iterable, Optional
+from typing import Iterable, Optional
 
 try:
+    from anki.collection import _Collection
     from anki.notes import Note
+    from anki.types import NoteType
     from anki.utils import splitFields
+    from aqt.main import AnkiQt
 except ModuleNotFoundError:
     # allow running tests without anki package installed
+    from typing import Any, Dict
+
+    _Collection = Any
+    NoteType = Dict[str, Any]
+    AnkiQt = Any
+
     class Note:
         def __init__(self, collection, model):
             self.fields = []
@@ -20,8 +29,8 @@ from .model import JsonData, AnkiNote
 
 @dataclass
 class AnkiModelNotes:
-    collection: Any  # anki.collection._Collection
-    model: Any  # anki.models.NoteType
+    collection: _Collection
+    model: NoteType
     content_field_index: int
     source_field_index: Optional[int]
 
@@ -29,7 +38,7 @@ class AnkiModelNotes:
         note = self._note(anki_note)
         self.collection.addNote(note)
 
-    def _note(self, anki_note: AnkiNote) -> 'Note':
+    def _note(self, anki_note: AnkiNote) -> Note:
         note = Note(self.collection, self.model)
         note.fields[self.content_field_index] = anki_note.content
         if self.source_field_index is not None:
@@ -45,7 +54,7 @@ class AnkiModelNotes:
 
 @dataclass
 class AnkiAddonData:
-    anki_qt: Any  # aqt.main.AnkiQt
+    anki_qt: AnkiQt
 
     def read_config(self) -> JsonData:
         return self.anki_qt.addonManager.getConfig(__name__)
@@ -60,7 +69,7 @@ class AnkiAddonData:
 
 @dataclass
 class AnkiCollection:
-    collection: Any  # anki.collection._Collection
+    collection: _Collection
 
     def get_model_notes(
         self, model_name: str, content_field: str, source_field: Optional[str],
