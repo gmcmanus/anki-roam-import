@@ -1,5 +1,6 @@
 {
     "model_name": "Cloze",
     "content_field": "Text",
-    "source_field": null
+    "source_field": null,
+    "deck_name": null
 }

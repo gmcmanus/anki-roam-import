@@ -33,6 +33,7 @@ def roam_json_file(tmp_path_factory) -> JsonFile:
 MODEL_NAME = 'model name'
 CONTENT_FIELD = 'content field name'
 SOURCE_FIELD = 'source field name'
+DECK_NAME = 'deck name'
 
 
 @pytest.fixture
@@ -43,6 +44,7 @@ def addon_data(tmp_path_factory) -> AnkiAddonData:
         'model_name': MODEL_NAME,
         'content_field': CONTENT_FIELD,
         'source_field': SOURCE_FIELD,
+        'deck_name': DECK_NAME,
     }
 
     user_files_path = tmp_path_factory.mktemp('user_files')
@@ -55,7 +57,7 @@ def addon_data(tmp_path_factory) -> AnkiAddonData:
 def anki_collection(anki_model_notes) -> AnkiCollection:
     collection = mock(AnkiCollection)
     (when(collection.get_model_notes)
-     .called_with(MODEL_NAME, CONTENT_FIELD, SOURCE_FIELD)
+     .called_with(MODEL_NAME, CONTENT_FIELD, SOURCE_FIELD, DECK_NAME)
      .then_return(anki_model_notes))
     return collection
 

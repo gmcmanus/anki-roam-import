@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
@@ -72,9 +73,13 @@ class AnkiCollection:
     collection: _Collection
 
     def get_model_notes(
-        self, model_name: str, content_field: str, source_field: Optional[str],
+        self,
+        model_name: str,
+        content_field: str,
+        source_field: Optional[str],
+        deck_name: Optional[str],
     ) -> AnkiModelNotes:
-        model = self.collection.models.byName(model_name)
+        model = self._get_model(model_name, deck_name)
 
         field_names = self.collection.models.fieldNames(model)
         content_field_index = field_names.index(content_field)
@@ -86,3 +91,15 @@ class AnkiCollection:
 
         return AnkiModelNotes(
             self.collection, model, content_field_index, source_field_index)
+
+    def _get_model(self, model_name: str, deck_name: Optional[str]) -> NoteType:
+        model = deepcopy(self.collection.models.byName(model_name))
+        self._set_deck_for_new_cards(model, deck_name)
+        return model
+
+    def _set_deck_for_new_cards(
+        self, model: NoteType, deck_name: Optional[str],
+    ) -> None:
+        if deck_name:
+            deck_id = self.collection.decks.id(deck_name, create=True)
+            model['did'] = deck_id

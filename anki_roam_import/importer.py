@@ -41,6 +41,7 @@ class AnkiNoteImporter:
             config['model_name'],
             config['content_field'],
             config['source_field'],
+            config['deck_name'],
         )
         note_adder = AnkiNoteAdder(model_notes, added_notes, normalized_notes)
 
